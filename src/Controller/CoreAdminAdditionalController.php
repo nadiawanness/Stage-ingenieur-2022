@@ -31,14 +31,16 @@ class CoreAdminAdditionalController extends AbstractController
                                                                                                            // un super admin pour faire cette action  
                     {
                         return new Response (
-                            $admin->getAdmin($request)
+                            $admin->getAdmin($request) 
+                           
                         );
                     }
                 else 
-                    return $this->json('Role Super Admin is required to do this action ! ');
-            
-         
-        
+                    return $this->json([
+                       "code" => "400",
+                       "messsage" => "Role Super Admin is required ! "
+                   ]); 
+               
          
     } 
 
@@ -59,13 +61,16 @@ class CoreAdminAdditionalController extends AbstractController
                         );
                     }
                 else 
-                    return $this->json('Role Super Admin is required to this field ! ');
+                    return $this->json([
+                       "code" => "400",
+                       "messsage" => "Role admin is required ! "
+                   ]); 
 
 
     }
 
-
-    #[Route('/api/verifyRole',name: 'app_verify_role',methods: ['GET'])]
+     //fonction de test 
+    /* #[Route('/api/verifyRole',name: 'app_verify_role',methods: ['GET'])]
     public function verifyRole()
     {
         if($this->getUser())
@@ -80,7 +85,7 @@ class CoreAdminAdditionalController extends AbstractController
                 return $this->json('true role');
             }
             else 
-                return $this->json('false role'); */
+                return $this->json('false role'); 
                 $isRoleAdmin = $auth_checker->isGranted('ROLE_USER');
                 return $this->json($isRoleAdmin);
             
@@ -89,5 +94,5 @@ class CoreAdminAdditionalController extends AbstractController
         else 
             return $this->json('not connected ! ');
         
-    }
+    } */ 
 }

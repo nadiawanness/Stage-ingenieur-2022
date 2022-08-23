@@ -11,6 +11,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: CoreUserRepository::class)]
 #[UniqueEntity(fields: ['email'], message: 'There is already an account with this email')]
@@ -19,94 +20,128 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups( [ 'coreuser:read' , 'coreorganization:read' ] )]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: 'Username is required !')]
+    #[Groups('coreuser:read')]
     private ?string $username = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups('coreuser:read')]
     private ?string $usernameCanonical = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: 'Email is required !')]
+    #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups('coreuser:read')]
     private ?string $emailCanonical = null;
 
     #[ORM\Column(length: 255)]
     //#[Assert\NotBlank(message: 'Password is required !')]
     //#[Assert\Length(min: 6)]
+    #[Groups('coreuser:read')]
     private ?string $password = null;
 
     #[ORM\Column(length: 255,nullable: true)]
+    #[Groups('coreuser:read')]
     private ?string $salt = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    #[Groups('coreuser:read')]
     private ?\DateTimeInterface $lastLogin = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups('coreuser:read')]
     private ?string $confirmationToken = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups('coreuser:read')]
     private ?\DateTimeImmutable $passwordRequestedAt = null;
 
     #[ORM\Column(type:'json')]
+    #[Groups([ 'coreuser:read'  ])]
     private  $roles = [];
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups('coreuser:read')]
     private ?string $locale = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups('coreuser:read')]
     private ?string $firstName = null;
-
+    
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups('coreuser:read')]
     private ?string $lastName = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups('coreuser:read')]
     private ?string $functionUser = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups('coreuser:read')]
     private ?string $phone = null;
 
     #[ORM\Column(length: 255)]
     //#[Assert\Choice(callback: 'getCivilities')]
     #[Assert\Choice(["Mr", "Mrs", "Ms"])]
     #[Assert\NotBlank(message: 'Civility is required !')]
+    #[Groups('coreuser:read')]
     private ?string $civility = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups('coreuser:read')]
     private ?string $type = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups('coreuser:read')]
     private ?string $idErp = null;
 
     #[ORM\Column(length: 255,nullable: true)]
+    #[Groups('coreuser:read')]
     private ?string $confirmPassword = null;
 
     #[ORM\Column]
+    #[Groups('coreuser:read')]
     private ?bool $enabled = null;
 
     #[ORM\Column]
+    #[Groups('coreuser:read')]
     private ?bool $hasDelegate = null;
 
     #[ORM\Column]
+    #[Groups('coreuser:read')]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column]
+    #[Groups('coreuser:read')]
     private ?\DateTimeImmutable $updatedAt = null;
 
     #[ORM\ManyToMany(targetEntity: CoreOrganization::class)]
     #[ORM\JoinTable(name: 'core_user_organization')]
     #[ORM\JoinColumn(name: 'core_user_additional_id', referencedColumnName: 'id')]
+    #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private Collection $organizations;
 
     #[ORM\OneToMany(mappedBy: 'coreUser', targetEntity: CoreUserAgencies::class, orphanRemoval: true)]
+    #[Groups('coreuser:read')]
     private Collection $coreUserAgencies;
 
     #[ORM\OneToMany(mappedBy: 'assignedTo', targetEntity: CoreOrganization::class)]
+    #[Groups('coreuser:read')]
     private Collection $coreOrganizations;
+    
+    #[Groups('coreuser:read')]
+    #[ORM\OneToMany(mappedBy: 'coreUser', targetEntity: CoreCountry::class, orphanRemoval: true)]
+    private Collection $coreCountries;
+
+    /* #[ORM\OneToMany(mappedBy: 'creatorId', targetEntity: CoreAgency::class, orphanRemoval: true)]
+    private Collection $agencies; */
 
 
     public function __construct()
@@ -117,6 +152,10 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
         $this->coreUserAgencies = new ArrayCollection();
         $this->agencies = new ArrayCollection();
         $this->coreOrganizations = new ArrayCollection();
+        $this->coreCountries = new ArrayCollection();
+        $this->enabled = true ;
+        $this->hasDelegate = false ;
+        $this->locale = 'en';
         
     }
     
@@ -501,6 +540,66 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($coreOrganization->getAssignedTo() === $this) {
                 $coreOrganization->setAssignedTo(null);
+            }
+        }
+
+        return $this;
+    }
+
+   /* /**
+     * @return Collection<int, CoreAgency>
+     */
+    /* public function getAgencies(): Collection
+    {
+        return $this->agencies;
+    }
+
+    public function addAgency(CoreAgency $agency): self
+    {
+        if (!$this->agencies->contains($agency)) {
+            $this->agencies->add($agency);
+            $agency->setCreatorId($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAgency(CoreAgency $agency): self
+    {
+        if ($this->agencies->removeElement($agency)) {
+            // set the owning side to null (unless already changed)
+            if ($agency->getCreatorId() === $this) {
+                $agency->setCreatorId(null);
+            }
+        }
+
+        return $this;
+    } */
+
+    /**
+     * @return Collection<int, coreCountry>
+     */
+    public function getCoreCountries(): Collection
+    {
+        return $this->coreCountries;
+    }
+
+    public function addCoreCountry(coreCountry $coreCountry): self
+    {
+        if (!$this->coreCountries->contains($coreCountry)) {
+            $this->coreCountries->add($coreCountry);
+            $coreCountry->setCoreUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCoreCountry(coreCountry $coreCountry): self
+    {
+        if ($this->coreCountries->removeElement($coreCountry)) {
+            // set the owning side to null (unless already changed)
+            if ($coreCountry->getCoreUser() === $this) {
+                $coreCountry->setCoreUser(null);
             }
         }
 

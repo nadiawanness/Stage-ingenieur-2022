@@ -39,6 +39,32 @@ class CoreOrganizationRepository extends ServiceEntityRepository
         }
     }
 
+
+    public function findByOrg($value): array
+    {
+       return $this->createQueryBuilder('organization')
+           ->select('organization')
+           ->andWhere('organization.assignedTo = :val')
+           ->setParameter('val', $value)
+           ->orderBy('organization.id', 'DESC')
+           ->getQuery()
+           ->getResult()
+      ;
+   }
+
+  /*  public function findCoreUserByType($type): array
+   {
+       return $this->createQueryBuilder('organisation')
+           ->select('organisation')
+           ->andWhere('organisation.assignedTo.id = :val')
+           ->setParameter('val', $type)
+           ->orderBy('user.id', 'DESC')
+           ->getQuery()
+           ->getResult()
+  ;
+  } */
+
+
 //    /**
 //     * @return CoreOrganization[] Returns an array of CoreOrganization objects
 //     */

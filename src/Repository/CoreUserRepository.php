@@ -51,21 +51,38 @@ class CoreUserRepository extends ServiceEntityRepository
    ;
    }
 
-   public function findByOrganization($organization): array
+   public function findByOrg($admin): array 
+   {
+    $page = 1 ;
+    $pageSize = 100 ;
+        return $this->createQueryBuilder('user')
+            ->select('user')
+            ->leftJoin('user.organizations','org')
+            ->andWhere('user.type = :type')
+            ->andWhere('org.assignedTo = :idadmin')
+            ->andWhere('org.status = :status')
+            ->andWhere('org.enabled = :enabled')
+            ->setParameter('type','core_user_additional')
+            ->setParameter('idadmin',$admin)
+            ->setParameter('status','valid')
+            ->setParameter('enabled','1')
+            ->orderBy('user.id','DESC')
+            ->setFirstResult($pageSize * ($page-1))
+            ->setMaxResults($pageSize)
+            ->getQuery()
+            ->getResult() 
+            ;
+   }
+
+  /* public function findByOrganization($organization): array
    {
        return $this->createQueryBuilder('user')
            ->select('user')
-           ->join('user.organisations','org')
-           ->addSelect('org')
-           ->andWhere('org.companyName = :val')
-           //->andWhere('u.nom = :val')
-           ->setParameter('val', $organization)
-           ->orderBy('user.id', 'DESC')
-           //->setMaxResults(10)
+           ->andWhere('user.ha')
           ->getQuery()
           ->getResult()
   ;
-  }
+  } */
 
    public function findCoreUserByEnabled($enabled): array
    {
