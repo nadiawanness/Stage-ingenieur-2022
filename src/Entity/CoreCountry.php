@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\CoreCountryRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: CoreCountryRepository::class)]
 class CoreCountry
@@ -15,6 +16,7 @@ class CoreCountry
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups('coreuser:read')]
     private ?string $name = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -108,9 +110,11 @@ class CoreCountry
     function __construct()
     {
         $this->enabled = true ;
-        $this->createdAt = new \DateTimeImmutable();
-        $this->updatedAt = new \DateTimeImmutable();
-        
+        $this->createdAt = new \DateTimeImmutable() ;
+        $this->updatedAt = new \DateTimeImmutable() ;
+        $this->languages = array() ;
+        $this->translations = array() ;
+        $this->regionalBlocs = array() ;
     }
    
 
@@ -337,8 +341,8 @@ class CoreCountry
 
     public function getBorders(): array
     {
-        $borders = $this->borders;
-        return array_unique($roles);
+        return $this->borders;
+       
     }
 
     public function setBorders(?array $borders): self
@@ -386,8 +390,8 @@ class CoreCountry
 
     public function getTranslations(): array
     {
-        $translations = $this->translations;
-        return array_unique($translations);
+        return $this->translations;
+       
     }
 
     public function setTranslations(?array $translations): self
@@ -411,8 +415,8 @@ class CoreCountry
 
     public function getRegionalBlocs(): array
     {
-        $regionalBlocs = $this->regionalBlocs;
-        return array_unique($regionalBlocs);
+        return $this->regionalBlocs;
+        
     }
 
     public function setRegionalBlocs(array $regionalBlocs): self

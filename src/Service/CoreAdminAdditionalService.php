@@ -4,20 +4,27 @@ namespace App\Service;
 
 use Symfony\Component\HttpFoundation\Request;
 use App\Repository\CoreUserRepository;
+use App\Repository\CoreOrganizationRepository;
+use App\Repository\CoreCountryRepository;
 use Symfony\Component\Serializer\SerializerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\CoreUser; 
+use App\Entity\CoreCountry; 
+use App\Entity\CoreOrganization; 
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 class CoreAdminAdditionalService 
 {
     public function __construct(
         private CoreUserRepository $userRepo ,
+        private CoreOrganizationRepository $orgRepo ,
+        private CoreCountryRepository $countryRepo ,
         private SerializerInterface $serializer , 
-        private EntityManagerInterface $em,
+        private EntityManagerInterface $em ,
         private PaginatorInterface $paginator
         )
     {
@@ -38,9 +45,11 @@ class CoreAdminAdditionalService
     }
 
     public function addAdmin(
-        Request $request,
-        ValidatorInterface $validator,
-        UserPasswordHasherInterface $userPasswordHasher
+        Request $request ,
+        ValidatorInterface $validator ,
+        UserPasswordHasherInterface $userPasswordHasher ,
+        $idOrg ,
+        $idCountry
       )
     {
        $jsonRecu = $request->getContent();
@@ -53,10 +62,46 @@ class CoreAdminAdditionalService
                 $user->getPassword()
             )
         );
+
+        $country = $this->countryRepo->find($idCountry);
+        //dd($idCountry);
+        if($country instanceof CoreCountry)
+            {
+                if($country->isEnabled())
+                    {
+                        $user->addCoreCountry($country);
+                    }
+                else 
+                    return new JsonResponse(['message' => 'this country is disabled . try again'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+        else 
+            return new JsonResponse(['message' => 'this country does not exist . try again'], Response::HTTP_INTERNAL_SERVER_ERROR);
+
+        $organization = $this->orgRepo->find($idOrg);
+        //dd($idOrg);
+        if($organization instanceof CoreOrganization)
+            {
+                if($organization->isEnabled())
+                    {
+                        if($organization->getStatus() == 'valid')
+                            {
+                                $user->addCoreOrganization($organization);
+                            }
+                        else 
+                            return new JsonResponse(['message' => 'this organization is not valid . try again'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        
+                    }
+                else 
+                    return new JsonResponse(['message' => 'this organization is not enabled . try again'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+        else 
+            return new JsonResponse(['message' => 'this organization does not exist . try again'], Response::HTTP_INTERNAL_SERVER_ERROR);
+
         $user->setType('core_admin_additional');
         $user->setEnabled(true);
         $user->setHasDelegate(false);
         $user->setRoles(["ROLE_ADMIN"]); 
+        $user->setConfirmationToken(md5(uniqid()));
 
         $errors = $validator->validate($user);
         if(count($errors) > 0)

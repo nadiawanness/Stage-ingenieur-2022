@@ -94,8 +94,8 @@ class CoreOrganization
     //#[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?\DateTimeInterface $incorporationDate = null;
 
-    /* #[ORM\Column(type: Types::ARRAY, nullable: true)]
-    private array $industryCodes = []; */
+    #[ORM\Column( nullable: true)]
+    private array $industryCodes = []; 
 
     #[ORM\Column(length: 255, nullable: true)]
     //#[Groups('coreuser:read')]
@@ -169,7 +169,12 @@ class CoreOrganization
 
     public function __construct()
     {
-        $this->coreAgencies = new ArrayCollection();
+        $this->coreAgencies = new ArrayCollection() ;
+        $this->source = array() ;
+        $this->previousNames =  array() ;
+        $this->industryCodes =  array() ;
+        $this->status = 'valid' ;
+        $this->enabled = true ;
     }
 
     public function getId(): ?int
@@ -358,8 +363,8 @@ class CoreOrganization
 
     public function getIndustryCodes(): array
     {
-        $industryCodes = $this->industryCodes;
-        return array_unique($industryCodes); 
+        return $this->industryCodes;
+        //return array_unique($industryCodes); 
     }
 
     public function setIndustryCodes(?array $industryCodes): self
@@ -407,8 +412,8 @@ class CoreOrganization
 
     public function getPreviousNames(): array
     {
-        $previousNames = $this->previousNames;
-        return array_unique($previousNames); 
+        return $this->previousNames;
+        //return array_unique($previousNames); 
     }
 
     public function setPreviousNames(?array $previousNames): self
@@ -442,7 +447,7 @@ class CoreOrganization
         return $this;
     }
 
-    /* public function getSource(): array
+     public function getSource(): array
     {
         return $this->source;
     }
@@ -452,7 +457,7 @@ class CoreOrganization
         $this->source = $source;
 
         return $this;
-    } */
+    } 
 
     public function getLogo(): ?string
     {

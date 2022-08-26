@@ -12,6 +12,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\CoreUser; 
 use App\Entity\CoreUserAgencies; 
 use App\Entity\CoreCountry;
+use App\Entity\CoreOrganization;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -90,81 +91,68 @@ class CoreUserAdditionalService
         //$user->setHasDelegate(false);
 
         $country = $this->countryRepo->find($idCountry);
-        
+
+        if($country instanceof CoreCountry) //step1 : verify the existance of the country in CoreCountry
+            {
+                if($country->isEnabled()) //step2 : verify if the country is enabled or not
+                        {
+                            $user->addCoreCountry($country);
+                        }
+                    else 
+                        return new JsonResponse(['message' => 'this country is disabled .'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+        else 
+            return new JsonResponse(['message' => 'this country does not exist .'], Response::HTTP_INTERNAL_SERVER_ERROR);
       
-                if($country->isEnabled())
-                    {
-                        $user->setCoreCountries($country);
-                    }
-                else 
-                    return new JsonResponse(
-                        [
-                            'error' => '400' ,
-                            'message' => 'Sorry this country is disabled ! '
-                        ]
-                    );
-    
-        
-        
 
         $organization  = $this->orgRepo->find($idOrganization);
 
-        
-                if($organization->isEnabled()) //step2 : verify if the organisation is enabled or not 
-                    {
-                        if($organization->getStatus() == 'valid') //step3 : verify if the organisation status (valid or not) 
-                            {
-                                $user->addOrganization($organization);
-                            }
-                        else 
-                            return new JsonResponse(
-                                [
-                                    'error' => '400' ,
-                                    'message' => 'Sorry cannot add this organization to this user, it is not a valid organization ! '
-                                ]
-                            );
-                    }
-                else 
-                    return new JsonResponse(
-                        [
-                            'error' => '400' ,
-                            'message' => 'Sorry cannot add this organization to this user, it is disabled ! '
-                        ]
-                    );
+            if($organization instanceof CoreOrganization) //step1 : verify the existance of $organization in CoreOrganization
+                {
+                    if($organization->isEnabled()) //step2 : verify if the organisation is enabled or not 
+                        {
+                            if($organization->getStatus() == 'valid') //step3 : verify if the organisation status (valid or not) 
+                                {
+                                    $user->addOrganization($organization);
+                                }
+                            else 
+                                return new JsonResponse(['message' => 'this organization is not valid .'], Response::HTTP_INTERNAL_SERVER_ERROR);
+                        }
+                    else 
+                        return new JsonResponse(['message' => 'this organization is disabled .'], Response::HTTP_INTERNAL_SERVER_ERROR);
 
+                }
+            else 
+                return new JsonResponse(['message' => 'this organization does not exist .'], Response::HTTP_INTERNAL_SERVER_ERROR);
+                
            
         
         
         $agency = $this->agencyRepo->find($idAgency);
-        
-            if($agency->getCoreOrganization()->getId() == $organization->getId()) //verify if the organization exist in the organization
-                {
-                    //dd($agency->isEnabled());
-                    if($agency->isEnabled()) //verify if the agency is enabled or not
-                        {
-                            //dd($agency->IsEnbled());
-                            $coreUserAgency = new CoreUserAgencies();
-                            $coreUserAgency->setCoreUser($user);    
-                            $coreUserAgency->setCoreAgency($agency);
-                            $this->em->persist($coreUserAgency);
-                        }
-                    else 
-                        return new JsonResponse(
-                            [
-                                'error' => '400' ,
-                                'message' => 'Sorry cannot add this agency  to this user, it is disabled ! '
-                            ]
-                        );
+        if($agency instanceof CoreAgency) //step1 : verify the existance of the agency
+            {
+                if($agency->getCoreOrganization()->getId() == $organization->getId()) //verify if the agency exist in the chosen organization
+                    {
+                        if($agency->isEnabled()) //verify if the agency is enabled or not
+                            {
+                                $coreUserAgency = new CoreUserAgencies();
+                                $coreUserAgency->setCoreUser($user);    
+                                $coreUserAgency->setCoreAgency($agency);
+                                $this->em->persist($coreUserAgency);
+                            }
+                        else 
+                            return new JsonResponse(['message' => 'this agency is disabled .'], Response::HTTP_INTERNAL_SERVER_ERROR);
 
-                
-                }
-            else 
-                return new JsonResponse(
-                    [
-                        'error' => '400' ,
-                        'message' => 'Sorry cannot add this agency  to this user, it is not in this organization ! '
-                    ]
-                );
+                    
+                    }
+                else 
+                    return new JsonResponse(['message' => 'this agency does not belong to the chosen organisation .'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+        else 
+            return new JsonResponse(['message' => 'this agency does not exist .'], Response::HTTP_INTERNAL_SERVER_ERROR);
+
+            
     
         
 
@@ -216,24 +204,25 @@ class CoreUserAdditionalService
     {
         $user = $this->userRepo->find($idUser);
         $this->em->getConnection()->beginTransaction();
-       try{
-        if($user->getType() == 'core_user_additional')
-            {
-                $p = $this->serializer->serialize($user, 'json');
-                return $p ;
-            }
-        else 
-            return new JsonResponse(
-                [
-                    'error' => '400' ,
-                    'message' => 'Should be a core user additional'
-                ]
-            );
+        try{
+            if($user instanceof CoreUser)
+                {
+                    if($user->getType() == 'core_user_additional')
+                        {
+                            $p = $this->serializer->serialize($user, 'json');
+                            return $p ;
+                        }
+                    else 
+                        return new JsonResponse(['message' => 'this user should be core_user_additional type .'], Response::HTTP_INTERNAL_SERVER_ERROR);
 
+                }
+            else 
+                return new JsonResponse(['message' => 'this user does not exist .'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        
         } catch(Exception $e){
           $em->getConnection()->rollback();
           throw $e;
-    }
+            }
     }
 
     public function disableUser($idUser, $value)
@@ -347,48 +336,49 @@ class CoreUserAdditionalService
         $user = $this->userRepo->find($idUser);
         $this->em->getConnection()->beginTransaction();
         try{
-                 if($user->getType() == 'core_user_additional')
-                    {
-                        
-                      
-                                if($user->isEnabled() ) //verifier si le compte de user est active
-                                    {
-                                        
-
-                                            $user->setEnabled(false); // s'il est active on le rend desactiver
-                                            $this->em->flush();
-                                            $this->em->getConnection()->commit();
-                                            return 
-                                                'user is disabled ! ' ;      
-                                      
-                                         
-                                    }      
-                                else if (!$user->isEnabled())
-                                    {
-                                      
-                                            $user->setEnabled(true); // s'il est active on le rend desactiver
-                                            $this->em->flush();
-                                            $this->em->getConnection()->commit();
-                                            return 
-                                                'user is enabled ! ' ;
-                                        
-                                    }   
-                                else 
-                                    return new JsonResponse(
-                                        ['message' => "error. please try again."],
-                                             Response::HTTP_INTERNAL_SERVER_ERROR);
-                           
-                               
+            if($user instanceof CoreUser)
+                {
+                    if($user->getType() == 'core_user_additional')
+                        {
                             
-                    }
+                        
+                            if($user->isEnabled() ) //verifier si le compte de user est active
+                                {
+                                    
+
+                                    $user->setEnabled(false); // s'il est active on le rend desactiver
+                                    $this->em->flush();
+                                    $this->em->getConnection()->commit();
+                                    return 
+                                        'user is disabled ! ' ;      
+                                
+                                    
+                                }      
+                            else if (!$user->isEnabled())
+                                {
+                                
+                                    $user->setEnabled(true); // s'il est active on le rend desactiver
+                                    $this->em->flush();
+                                    $this->em->getConnection()->commit();
+                                    return 
+                                        'user is enabled ! ' ;
+                                    
+                                }   
+                            else 
+                                return new JsonResponse(['message' => 'error . try again'], Response::HTTP_INTERNAL_SERVER_ERROR);
+                            
+                                
+                                
+                        }
                     
 
-                else 
-                    return new JsonResponse(
-                        ['message' => "user must be of type core_user_additional. please try again."],
-                             Response::HTTP_INTERNAL_SERVER_ERROR);
+                    else 
+                        return new JsonResponse(['message' => 'this user should be a core_user_additional type .'], Response::HTTP_INTERNAL_SERVER_ERROR);
+                }
+            else 
+                return new JsonResponse(['message' => 'this user does not exist .'], Response::HTTP_INTERNAL_SERVER_ERROR);
+                 
             
-
 
         } catch(Exception $e){
             $em->getConnection()->rollback();

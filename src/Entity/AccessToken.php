@@ -14,7 +14,7 @@ class AccessToken
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(type: Types::ARRAY, nullable: true)]
+    #[ORM\Column( nullable: true)]
     private array $attributes = [];
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -22,6 +22,12 @@ class AccessToken
 
     #[ORM\Column(nullable: true)]
     private ?bool $punchout = null;
+
+    function __construct()
+    {
+        $this->punchout = false ;
+        $this->attributes = array() ;
+    }
 
     public function getId(): ?int
     {

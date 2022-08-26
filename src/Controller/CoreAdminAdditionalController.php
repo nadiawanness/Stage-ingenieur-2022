@@ -11,6 +11,11 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use App\Entity\AccessToken;
+use App\Entity\CoreUser;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 class CoreAdminAdditionalController extends AbstractController
 {
@@ -23,7 +28,6 @@ class CoreAdminAdditionalController extends AbstractController
     } */
 
     #[Route('/api/getAdmin',name: 'app_get_admin',methods: ['GET'])]
-    //#[IsGranted('ROLE_SUPER_ADMIN',message: 'Sorry you are not allowed to get the admins list ! you need to be a super admin ')]
     public function getAdmins(CoreAdminAdditionalService $admin,Request $request): Response{
 
        
@@ -45,19 +49,35 @@ class CoreAdminAdditionalController extends AbstractController
     } 
 
 
-    #[Route('/api/postAdmin',name: 'app_post_admin',methods: ['POST'])]
+    #[Route('/api/postAdmin/{idOrganization}/{idCountry}',name: 'app_post_admin',methods: ['POST'])]
     //#[IsGranted('ROLE_SUPER_ADMIN',message: 'Sorry you are not allowed to add an admin ! you need to be a super admin ')]
     public function postAdmin(
-        CoreAdminAdditionalService $admin,
-        Request $request,
-        ValidatorInterface $validator,
-        UserPasswordHasherInterface $userPasswordHasher
+        CoreAdminAdditionalService $admin ,
+        Request $request ,
+        ValidatorInterface $validator ,
+        UserPasswordHasherInterface $userPasswordHasher ,
+        $idOrganization ,
+        $idCountry 
     ){
        
                 if($this->container->get('security.authorization_checker')->isGranted('ROLE_SUPER_ADMIN'))
                     {
                         return $this->json (
-                            $admin->addAdmin($request,$validator,$userPasswordHasher)
+                            $admin->addAdmin($request,$validator,$userPasswordHasher,$idOrganization,$idCountry) ,
+                            201 ,
+                            [] ,
+                            [
+                                ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER => 
+                                function($organisation){
+                                    return 
+                                    //$role->addUser($role->getUsers());
+                                    //$role->getUsers();
+                                    //$user->getEmail();
+                                    //$organisation->getCompanyName();
+                                    'nadia' ;
+                                    //$role->getNom();
+                                }
+                            ]
                         );
                     }
                 else 
@@ -69,6 +89,42 @@ class CoreAdminAdditionalController extends AbstractController
 
     }
 
+    
+    #[Route('/api/getTokenDetails',name: 'app_get_token_details',methods: ['POST'])]
+    public function getTokenDetails(
+        EntityManagerInterface $em ,
+        Request $request
+    ){
+        $em->getConnection()->beginTransaction();
+        try{
+
+        $token = $this->container->get('security.token_storage')->getToken();
+        dd($this->container->get('lexik_jwt_authentication.encoder')->encode(['username' => $user->getUsername()]));
+        $user = $token->getUser();
+        $access = new AccessToken(); 
+        $access->setSingleUseToken($token);
+        $access->setPunchout(false);
+        $access->setAttributes([
+            'id_user' => $user->getId() ,
+            'user_name' => $user->getUsername() ,
+            'email_user' => $user->getEmail() ,
+            'type_user' => $user->getType() ,
+            'status_user' => $user->isEnabled() ,
+            'delegate_user' => $user->isHasDelegate() ,
+            //'token_expiration_date' => $token->getTokenExpirationDate() ,
+            'role_user' => $user->getRoles() 
+        ]);
+        $em->persist($access);
+        $em->flush();
+        $em->getConnection()->commit();
+        //dd($access);
+        return new JsonResponse($access);
+
+        } catch(Exception $e){
+            $em->getConnection()->rollback();
+            throw $e;
+        }
+    }
      //fonction de test 
     /* #[Route('/api/verifyRole',name: 'app_verify_role',methods: ['GET'])]
     public function verifyRole()
