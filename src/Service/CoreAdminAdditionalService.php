@@ -6,11 +6,14 @@ use Symfony\Component\HttpFoundation\Request;
 use App\Repository\CoreUserRepository;
 use App\Repository\CoreOrganizationRepository;
 use App\Repository\CoreCountryRepository;
+use App\Repository\CoreRoleRepository;
 use Symfony\Component\Serializer\SerializerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\CoreUser; 
 use App\Entity\CoreCountry; 
-use App\Entity\CoreOrganization; 
+use App\Entity\CoreOrganization;
+use App\Entity\CoreRole;
+use App\Entity\CoreUserRole; 
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -25,7 +28,8 @@ class CoreAdminAdditionalService
         private CoreCountryRepository $countryRepo ,
         private SerializerInterface $serializer , 
         private EntityManagerInterface $em ,
-        private PaginatorInterface $paginator
+        private PaginatorInterface $paginator ,
+        private CoreRoleRepository $roleRepo
         )
     {
 
@@ -49,7 +53,8 @@ class CoreAdminAdditionalService
         ValidatorInterface $validator ,
         UserPasswordHasherInterface $userPasswordHasher ,
         $idOrg ,
-        $idCountry
+        $idCountry ,
+        $idRole
       )
     {
        $jsonRecu = $request->getContent();
@@ -96,12 +101,33 @@ class CoreAdminAdditionalService
             }
         else 
             return new JsonResponse(['message' => 'this organization does not exist . try again'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        
+            $user->setType('core_admin_additional');
+            $user->setEnabled(true);
+            $user->setHasDelegate(false);
 
-        $user->setType('core_admin_additional');
-        $user->setEnabled(true);
-        $user->setHasDelegate(false);
-        $user->setRoles(["ROLE_ADMIN"]); 
-        $user->setConfirmationToken(md5(uniqid()));
+        $role = $this->roleRepo->find($idRole);
+        if($role instanceof CoreRole)
+            {
+                if($role->isEnabled())
+                    {
+                        $coreUserRole = new CoreUserRole();
+                        $coreUserRole->setCoreUser($user);
+                        $coreUserRole->setCoreRole($role);
+                        $this->em->persist($coreUserRole);
+                        $this->em->flush();
+                    }
+                else 
+                    return new JsonResponse(['message' => 'this role is disabled . try again'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            } 
+        else 
+            return new JsonResponse(['message' => 'this role does not exist . try again'], Response::HTTP_INTERNAL_SERVER_ERROR);
+
+
+        $user->addCoreUserRole($coreUserRole);
+        $user->setRoles([]);
+        //dd($user->getCoreCountries()->getId());
+        //$user->setConfirmationToken(md5(uniqid()));
 
         $errors = $validator->validate($user);
         if(count($errors) > 0)

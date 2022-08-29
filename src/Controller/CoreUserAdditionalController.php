@@ -33,32 +33,39 @@ class CoreUserAdditionalController extends AbstractController
         CoreUserAdditionalService $simpleUser ,
         Request $request
         ): Response
-        {
-                    if($this->container->get('security.authorization_checker')->isGranted('ROLE_ADMIN'))
+            {       $role = $this->getUser()->getCoreUserRoles();
+                    foreach ($role as $role)
+                        {
+                            $roleAdmin = $role->getCoreRole()->getName();
+                        }
+    
+                    if($roleAdmin == 'ROLE_ADMIN')
                         {
                             return new Response (
-                                $simpleUser->getSimpleUser($request)
+                                $simpleUser->getSimpleUser($request) ,
+                                '200' ,
+                            [] ,
+                                [
+                                    ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER => 
+                                    function($organisation){
+                                        return 
+                                        //$role->addUser($role->getUsers());
+                                        //$role->getUsers();
+                                        //$user->getEmail();
+                                        //$organisation->getCompanyName();
+                                        'nadia' ;
+                                        //$role->getNom();
+                                    }
+                                ]
                             );
                         }
                     else 
                          return $this->json([
                             "code" => "400",
                             "messsage" => "Role admin is required ! " ,
-                            '200' ,
-                            [] ,
-                       [
-                           ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER => 
-                           function($organisation){
-                               return 
-                               //$role->addUser($role->getUsers());
-                               //$role->getUsers();
-                               //$user->getEmail();
-                               //$organisation->getCompanyName();
-                               'nadia' ;
-                               //$role->getNom();
-                           }
+                            
                        ]
-                        ]); 
+                        ); 
 
                         //return new JsonResponse('role admin is needed');
                     
@@ -68,7 +75,7 @@ class CoreUserAdditionalController extends AbstractController
 
 
 
-    #[Route('/api/postSimpleUser/{idCountry}/{idOrganization}/{idAgency}',name: 'app_post_simple_user',methods: ['POST'])]
+    #[Route('/api/postSimpleUser/{idOrganization}/{idAgency}/{idCountry}/{idRole}',name: 'app_post_simple_user',methods: ['POST'])]
     //#[IsGranted('ROLE_ADMIN',message: 'Sorry you are not allowed to add a simple user ! You need to get the admin role .')]
     public function postSimpleUser(
         CoreUserAdditionalService $simpleUser ,
@@ -77,13 +84,19 @@ class CoreUserAdditionalController extends AbstractController
         UserPasswordHasherInterface $userPasswordHasher , 
         $idOrganization ,
         $idAgency ,
-        $idCountry
+        $idCountry ,
+        $idRole
     ){
-        
-                if($this->container->get('security.authorization_checker')->isGranted('ROLE_ADMIN'))
+                $role = $this->getUser()->getCoreUserRoles();
+                foreach ($role as $role)
+                    {
+                        $roleAdmin = $role->getCoreRole()->getName();
+                    }
+
+                if($roleAdmin == 'ROLE_ADMIN')
                     {
                         return $this->json (
-                            $simpleUser->addSimpleUser($request,$validator,$userPasswordHasher,$idOrganization,$idAgency,$idCountry) ,
+                            $simpleUser->addSimpleUser($request,$validator,$userPasswordHasher,$idOrganization,$idAgency,$idCountry,$idRole) ,
                             201 ,
                             [] ,
                             [
@@ -101,10 +114,8 @@ class CoreUserAdditionalController extends AbstractController
                         );
                     }
                 else 
-                    return $this->json([
-                       "code" => "400",
-                       "messsage" => "Role admin is required ! "
-                   ]); 
+                    return new JsonResponse(['message' => 'role admin is required . try again'],
+                    Response::HTTP_INTERNAL_SERVER_ERROR); 
           
         
     }
@@ -114,12 +125,17 @@ class CoreUserAdditionalController extends AbstractController
     //#[IsGranted('ROLE_ADMIN',message: 'Sorry you are not allowed to enable a simple user account ! You need to get the admin role .')]
     public function changeStatusSimpleUser(
         CoreUserAdditionalService $simpleUser ,
-        $idUser ,
-      
+        $idUser 
     )
     {
       
-                if($this->container->get('security.authorization_checker')->isGranted('ROLE_ADMIN'))
+                $role = $this->getUser()->getCoreUserRoles();
+                foreach ($role as $role)
+                    {
+                        $roleAdmin = $role->getCoreRole()->getName();
+                    }
+
+                if($roleAdmin == 'ROLE_ADMIN')
                     {
                                 return $this->json(
                                  $simpleUser->changeStatusUser($idUser) ,
@@ -140,10 +156,8 @@ class CoreUserAdditionalController extends AbstractController
                                  );
                     }
                 else 
-                    return $this->json([
-                       "code" => "400",
-                       "messsage" => "Role admin is required ! "
-                   ]); 
+                    return new JsonResponse(['message' => 'role admin is required . try again'],
+                    Response::HTTP_INTERNAL_SERVER_ERROR); 
     
        
         
@@ -159,7 +173,13 @@ class CoreUserAdditionalController extends AbstractController
     )
     {
       
-                if($this->container->get('security.authorization_checker')->isGranted('ROLE_ADMIN'))
+                $role = $this->getUser()->getCoreUserRoles();
+                foreach ($role as $role)
+                    {
+                        $roleAdmin = $role->getCoreRole()->getName();
+                    }
+
+                if($roleAdmin == 'ROLE_ADMIN')
                     {
                                 return $this->json(
                                  $simpleUser->changeStatusUser2($idUser,$value) ,
@@ -180,10 +200,8 @@ class CoreUserAdditionalController extends AbstractController
                                  );
                     }
                 else 
-                    return $this->json([
-                       "code" => "400",
-                       "messsage" => "Role admin is required ! "
-                   ]); 
+                    return new JsonResponse(['message' => 'role admin is required . try again'],
+                    Response::HTTP_INTERNAL_SERVER_ERROR); 
     
        
         
@@ -200,7 +218,13 @@ class CoreUserAdditionalController extends AbstractController
     {
     
        
-                if($this->container->get('security.authorization_checker')->isGranted('ROLE_ADMIN'))
+                $role = $this->getUser()->getCoreUserRoles();
+                foreach ($role as $role)
+                    {
+                        $roleAdmin = $role->getCoreRole()->getName();
+                    }
+
+                if($roleAdmin == 'ROLE_ADMIN')
                     {
                         return $this->json(
                             $simpleUser->enableUser($idUser,$value)
@@ -208,10 +232,8 @@ class CoreUserAdditionalController extends AbstractController
 
                     }
                 else 
-                    return $this->json([
-                       "code" => "400",
-                       "messsage" => "Role admin is required ! "
-                   ]); 
+                    return new JsonResponse(['message' => 'role admin is required . try again'],
+                    Response::HTTP_INTERNAL_SERVER_ERROR); 
        
     }
 
@@ -231,10 +253,8 @@ class CoreUserAdditionalController extends AbstractController
                         );
                     }
                 else 
-                    return $this->json([
-                        'status'=> 400,
-                        'messsage' => 'Role admin is required ! '
-                    ]);
+                    return new JsonResponse(['message' => 'role admin is required . try again'],
+                    Response::HTTP_INTERNAL_SERVER_ERROR); 
        
     }
 
@@ -274,16 +294,17 @@ class CoreUserAdditionalController extends AbstractController
         $idUser
     )
     {
-       
-                if($this->container->get('security.authorization_checker')->isGranted('ROLE_ADMIN'))
+        
+                $role = $this->getUser()->getCoreUserRoles();
+                foreach ($role as $role)
                     {
-                        return new Response($simpleUser->getSimpleUserById($idUser));
+                        $roleAdmin = $role->getCoreRole()->getName();
                     }
-                else 
-                    return $this->json([
-                       "code" => "400",
-                       "messsage" => "Role admin is required ! " ,
-                       '200' ,
+
+                if($roleAdmin == 'ROLE_ADMIN')
+                    {
+                        return new Response($simpleUser->getSimpleUserById($idUser) ,
+                        '200' ,
                        [] ,
                   [
                       ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER => 
@@ -297,7 +318,11 @@ class CoreUserAdditionalController extends AbstractController
                           //$role->getNom();
                       }
                   ]
-                   ]); 
+                    );
+                    }
+                else 
+                    return new JsonResponse(['message' => 'role admin is required . try again'],
+                    Response::HTTP_INTERNAL_SERVER_ERROR); 
       
     }
 

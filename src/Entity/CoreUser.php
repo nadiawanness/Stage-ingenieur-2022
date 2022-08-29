@@ -64,8 +64,8 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
     private ?\DateTimeImmutable $passwordRequestedAt = null;
 
     #[ORM\Column(type:'json')]
-    #[Groups([ 'coreuser:read'  ])]
-    private  $roles = [];
+    #[Groups([ 'coreuser:read' ])]
+    private  $roles = []; 
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Groups('coreuser:read')]
@@ -137,8 +137,12 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
     private Collection $coreOrganizations;
     
     #[Groups('coreuser:read')]
-    #[ORM\OneToMany(mappedBy: 'coreUser', targetEntity: CoreCountry::class, orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'coreUser', targetEntity: CoreCountry::class, orphanRemoval: true , cascade: ['persist'])]
     private Collection $coreCountries;
+
+    #[ORM\OneToMany(mappedBy: 'coreUser', targetEntity: CoreUserRole::class, orphanRemoval: true)]
+    #[Groups('coreuser:read')]
+    private Collection $coreUserRoles;
 
     /* #[ORM\OneToMany(mappedBy: 'creatorId', targetEntity: CoreAgency::class, orphanRemoval: true)]
     private Collection $agencies; */
@@ -156,6 +160,7 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
         $this->enabled = true ;
         $this->hasDelegate = false ;
         $this->locale = 'en';
+        $this->coreUserRoles = new ArrayCollection();
         
     }
     
@@ -273,7 +278,7 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getRoles(): array
+     public function getRoles(): array
     {
         $roles = $this->roles;
         // guarantee every user at least has ROLE_USER
@@ -288,7 +293,7 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
         $this->roles = $roles;
 
         return $this;
-    }
+    } 
 
     public function getLocale(): ?string
     {
@@ -600,6 +605,36 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($coreCountry->getCoreUser() === $this) {
                 $coreCountry->setCoreUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, CoreUserRole>
+     */
+    public function getCoreUserRoles(): Collection
+    {
+        return $this->coreUserRoles;
+    }
+
+    public function addCoreUserRole(CoreUserRole $coreUserRole): self
+    {
+        if (!$this->coreUserRoles->contains($coreUserRole)) {
+            $this->coreUserRoles->add($coreUserRole);
+            $coreUserRole->setCoreUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCoreUserRole(CoreUserRole $coreUserRole): self
+    {
+        if ($this->coreUserRoles->removeElement($coreUserRole)) {
+            // set the owning side to null (unless already changed)
+            if ($coreUserRole->getCoreUser() === $this) {
+                $coreUserRole->setCoreUser(null);
             }
         }
 

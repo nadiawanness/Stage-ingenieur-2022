@@ -30,6 +30,7 @@ class CoreAdminAdditionalController extends AbstractController
     #[Route('/api/getAdmin',name: 'app_get_admin',methods: ['GET'])]
     public function getAdmins(CoreAdminAdditionalService $admin,Request $request): Response{
 
+                
        
                 if($this->container->get('security.authorization_checker')->isGranted('ROLE_SUPER_ADMIN')) // verifier si l'utilisateur connecte est
                                                                                                            // un super admin pour faire cette action  
@@ -49,7 +50,7 @@ class CoreAdminAdditionalController extends AbstractController
     } 
 
 
-    #[Route('/api/postAdmin/{idOrganization}/{idCountry}',name: 'app_post_admin',methods: ['POST'])]
+    #[Route('/api/postAdmin/{idOrganization}/{idCountry}/{idRole}',name: 'app_post_admin',methods: ['POST'])]
     //#[IsGranted('ROLE_SUPER_ADMIN',message: 'Sorry you are not allowed to add an admin ! you need to be a super admin ')]
     public function postAdmin(
         CoreAdminAdditionalService $admin ,
@@ -57,13 +58,14 @@ class CoreAdminAdditionalController extends AbstractController
         ValidatorInterface $validator ,
         UserPasswordHasherInterface $userPasswordHasher ,
         $idOrganization ,
-        $idCountry 
+        $idCountry ,
+        $idRole
     ){
        
                 if($this->container->get('security.authorization_checker')->isGranted('ROLE_SUPER_ADMIN'))
                     {
                         return $this->json (
-                            $admin->addAdmin($request,$validator,$userPasswordHasher,$idOrganization,$idCountry) ,
+                            $admin->addAdmin($request,$validator,$userPasswordHasher,$idOrganization,$idCountry,$idRole) ,
                             201 ,
                             [] ,
                             [

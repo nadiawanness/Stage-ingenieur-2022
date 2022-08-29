@@ -3,7 +3,10 @@
 namespace App\Entity;
 
 use App\Repository\CoreRoleRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: CoreRoleRepository::class)]
 class CoreRole
@@ -14,6 +17,7 @@ class CoreRole
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups('coreuser:read')]
     private ?string $name = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -30,6 +34,9 @@ class CoreRole
 
     #[ORM\Column]
     private ?\DateTimeImmutable $updatedAt = null;
+
+    #[ORM\OneToMany(mappedBy: 'coreRole', targetEntity: CoreUserRole::class, orphanRemoval: true)]
+    private Collection $coreUserRoles;
     
     function __construct()
     {
@@ -37,6 +44,7 @@ class CoreRole
         $this->enabled = true ;
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = new \DateTimeImmutabe();
+        $this->coreUserRoles = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -112,6 +120,36 @@ class CoreRole
     public function setUpdatedAt(\DateTimeImmutable $updatedAt): self
     {
         $this->updatedAt = $updatedAt;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, CoreUserRole>
+     */
+    public function getCoreUserRoles(): Collection
+    {
+        return $this->coreUserRoles;
+    }
+
+    public function addCoreUserRole(CoreUserRole $coreUserRole): self
+    {
+        if (!$this->coreUserRoles->contains($coreUserRole)) {
+            $this->coreUserRoles->add($coreUserRole);
+            $coreUserRole->setCoreRole($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCoreUserRole(CoreUserRole $coreUserRole): self
+    {
+        if ($this->coreUserRoles->removeElement($coreUserRole)) {
+            // set the owning side to null (unless already changed)
+            if ($coreUserRole->getCoreRole() === $this) {
+                $coreUserRole->setCoreRole(null);
+            }
+        }
 
         return $this;
     }

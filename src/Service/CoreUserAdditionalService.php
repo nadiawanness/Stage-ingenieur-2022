@@ -7,12 +7,16 @@ use App\Repository\CoreUserRepository;
 use App\Repository\CoreOrganizationRepository;
 use App\Repository\CoreAgencyRepository;
 use App\Repository\CoreCountryRepository;
+use App\Repository\CoreRoleRepository;
 use Symfony\Component\Serializer\SerializerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\CoreUser; 
 use App\Entity\CoreUserAgencies; 
 use App\Entity\CoreCountry;
 use App\Entity\CoreOrganization;
+use App\Entity\CoreRole;
+use App\Entity\CoreAgency;
+use App\Entity\CoreUserRole;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -28,7 +32,8 @@ class CoreUserAdditionalService
         private PaginatorInterface $paginator ,
         private CoreOrganizationRepository $orgRepo ,
         private CoreAgencyRepository $agencyRepo ,
-        private CoreCountryRepository $countryRepo
+        private CoreCountryRepository $countryRepo ,
+        private CoreRoleRepository $roleRepo
         )
     {
 
@@ -71,7 +76,8 @@ class CoreUserAdditionalService
         UserPasswordHasherInterface $userPasswordHasher ,
         $idOrganization ,
         $idAgency ,
-        $idCountry
+        $idCountry ,
+        $idRole
       )
     {
        $jsonRecu = $request->getContent();
@@ -86,12 +92,11 @@ class CoreUserAdditionalService
             )
         );
         $user->setType('core_user_additional');
-        $user->setRoles(["ROLE_USER"]); 
+         
         //$user->setEnabled(true);
         //$user->setHasDelegate(false);
 
         $country = $this->countryRepo->find($idCountry);
-
         if($country instanceof CoreCountry) //step1 : verify the existance of the country in CoreCountry
             {
                 if($country->isEnabled()) //step2 : verify if the country is enabled or not
@@ -107,7 +112,7 @@ class CoreUserAdditionalService
       
 
         $organization  = $this->orgRepo->find($idOrganization);
-
+        
             if($organization instanceof CoreOrganization) //step1 : verify the existance of $organization in CoreOrganization
                 {
                     if($organization->isEnabled()) //step2 : verify if the organisation is enabled or not 
@@ -125,10 +130,8 @@ class CoreUserAdditionalService
                 }
             else 
                 return new JsonResponse(['message' => 'this organization does not exist .'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        
                 
-           
-        
-        
         $agency = $this->agencyRepo->find($idAgency);
         if($agency instanceof CoreAgency) //step1 : verify the existance of the agency
             {
@@ -151,10 +154,28 @@ class CoreUserAdditionalService
             }
         else 
             return new JsonResponse(['message' => 'this agency does not exist .'], Response::HTTP_INTERNAL_SERVER_ERROR);
-
-            
-    
         
+        
+        $role = $this->roleRepo->find($idRole);
+        
+        if($role instanceof CoreRole) //step1 : verify the existance of the role
+            {
+                if($role->isEnabled()) //verify if the agency is enabled or not
+                    {
+                        $coreUserRole = new CoreUserRole();
+                        $coreUserRole->setCoreUser($user);    
+                        $coreUserRole->setCoreRole($role);
+                        $this->em->persist($coreUserRole);
+                        $this->em->flush();
+                    }
+                else 
+                    return new JsonResponse(['message' => 'this role is disabled .'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+        else 
+            return new JsonResponse(['message' => 'this role does not exist .'], Response::HTTP_INTERNAL_SERVER_ERROR);
+
+            $user->setRoles([]);
+            
 
         $errors = $validator->validate($user);
         if(count($errors) > 0)
@@ -173,47 +194,29 @@ class CoreUserAdditionalService
         }
     }
 
-    /* public function addCoreUserAgencies(
-        $idUSer , 
-        $idAgency 
-    )
-    {
-       $jsonRecu = $request->getContent();
-       $this->em->getConnection()->beginTransaction();
-       try{
-        $userAgencies = $this->serializer->deserialize($jsonRecu, CoreUserAgencies::class,'json');
-        $user = $this->orgRepo->find($idUser);
-        $agency = $this->agencyRepo->find($idAgency);
-        
-        $userAgencies->setCoreUser($user);
-        $userAgencies->setCoreAgency($agency); 
-
-        $this->em->persist($userAgencies);
-        $this->em->flush();
-        $this->em->getConnection()->commit();
-        //return $userAgencies;
-
-        } catch(Exception $e){
-            $em->getConnection()->rollback();
-            throw $e;
-        }
-
-    } */
+   
 
     public function getSimpleUserById($idUser)
     {
         $user = $this->userRepo->find($idUser);
+        /* $list = $user->getCoreUserRoles();
+        foreach ($list as $list)
+        {
+            dd($list->getCoreRole()->getName());
+        } */
+        //dd($user->getCoreUserRoles()->getId());
         $this->em->getConnection()->beginTransaction();
         try{
             if($user instanceof CoreUser)
                 {
-                    if($user->getType() == 'core_user_additional')
-                        {
+                     if($user->getType() == 'core_user_additional')
+                        { 
                             $p = $this->serializer->serialize($user, 'json');
                             return $p ;
-                        }
+                       }
                     else 
-                        return new JsonResponse(['message' => 'this user should be core_user_additional type .'], Response::HTTP_INTERNAL_SERVER_ERROR);
+                        return new JsonResponse(['message' => 'this user should be core_user_additional type .'],
+                         Response::HTTP_INTERNAL_SERVER_ERROR); 
 
                 }
             else 

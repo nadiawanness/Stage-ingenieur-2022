@@ -103,7 +103,7 @@ class CoreCountry
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $updatedAt = null;
 
-    #[ORM\ManyToOne(inversedBy: 'coreCountries')]
+    #[ORM\ManyToOne(inversedBy: 'coreCountries', cascade: ['persist'])]
     #[ORM\JoinColumn(name: 'core_user_id', referencedColumnName: 'id')]
     private ?CoreUser $coreUser = null;
     
