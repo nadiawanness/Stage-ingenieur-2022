@@ -35,8 +35,8 @@ class CoreAdminAdditionalController extends AbstractController
                 if($this->container->get('security.authorization_checker')->isGranted('ROLE_SUPER_ADMIN')) // verifier si l'utilisateur connecte est
                                                                                                            // un super admin pour faire cette action  
                     {
-                        return new Response (
-                            $admin->getAdmin($request) 
+                        return  $this->json (
+                            $admin->getAdmin($request)
                            
                         );
                     }
@@ -95,13 +95,13 @@ class CoreAdminAdditionalController extends AbstractController
     #[Route('/api/getTokenDetails',name: 'app_get_token_details',methods: ['POST'])]
     public function getTokenDetails(
         EntityManagerInterface $em ,
-        Request $request
+        Request $request ,
+        $user
     ){
         $em->getConnection()->beginTransaction();
         try{
-
         $token = $this->container->get('security.token_storage')->getToken();
-        dd($this->container->get('lexik_jwt_authentication.encoder')->encode(['username' => $user->getUsername()]));
+        
         $user = $token->getUser();
         $access = new AccessToken(); 
         $access->setSingleUseToken($token);
@@ -114,8 +114,9 @@ class CoreAdminAdditionalController extends AbstractController
             'status_user' => $user->isEnabled() ,
             'delegate_user' => $user->isHasDelegate() ,
             //'token_expiration_date' => $token->getTokenExpirationDate() ,
-            'role_user' => $user->getRoles() 
+            'role_user' => $user->getCoreUserRoles()
         ]);
+        
         $em->persist($access);
         $em->flush();
         $em->getConnection()->commit();

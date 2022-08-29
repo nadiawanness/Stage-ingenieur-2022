@@ -17,11 +17,15 @@ class AccessToken
     #[ORM\Column( nullable: true)]
     private array $attributes = [];
 
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(length: 2000, nullable: true)]
     private ?string $SingleUseToken = null;
 
     #[ORM\Column(nullable: true)]
     private ?bool $punchout = null;
+
+    #[ORM\ManyToOne(inversedBy: 'accessTokens')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?CoreUser $coreUser = null;
 
     function __construct()
     {
@@ -66,6 +70,18 @@ class AccessToken
     public function setPunchout(?bool $punchout): self
     {
         $this->punchout = $punchout;
+
+        return $this;
+    }
+
+    public function getCoreUser(): ?CoreUser
+    {
+        return $this->coreUser;
+    }
+
+    public function setCoreUser(?CoreUser $coreUser): self
+    {
+        $this->coreUser = $coreUser;
 
         return $this;
     }

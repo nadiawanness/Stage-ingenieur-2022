@@ -8,6 +8,15 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 use App\Service\CoreAdminAdditionalService;
 use Symfony\Component\HttpFoundation\Request;
+use App\Entity\CoreUser;
+use App\Entity\AccessToken;
+use App\Repository\CoreUserRepository;
+use App\Repository\AccessTokenRepository;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+
 
 class SecurityController extends AbstractController
 {
@@ -27,6 +36,79 @@ class SecurityController extends AbstractController
         ['last_username' => $lastUsername, 'error' => $error]); 
     }
 
+    #[Route(path: '/login/token/{idUser}', name: 'api_login_token' ,methods: ['POST'])]
+    public function loginTokenDetails(
+        CoreUserRepository $userRepo ,
+        AccessTokenRepository $accessRepo ,
+        Request $request , 
+        $idUser , 
+        JWTTokenManagerInterface $JWTManager ,
+        EntityManagerInterface $em 
+    )
+    {
+        $user = $userRepo->find($idUser);
+        $access = $accessRepo->findByUser($user->getId());
+        $token = $JWTManager->create($user);
+        $list = $access->getCoreUser();
+        /* foreach($list as $list)
+            {
+              $id = $list->getId();
+            } 
+
+            dd($id); */ 
+       /* if($user->getId() == $x->getId())
+        {
+            $em->getConnection()->beginTransaction();
+            try{
+            
+                $access->setSingleUseToken($token);
+                $em->persist($access);
+                $em->flush();
+                $em->getConnection()->commit();
+            
+
+            
+            } catch(Exception $e){
+                $em->getConnection()->rollback();
+                throw $e;
+            } 
+
+    }
+    else return 'does not exist' ; */
+        if($user instanceof CoreUser)
+            {
+                $token = $JWTManager->create($user); 
+                $em->getConnection()->beginTransaction();
+                try{
+
+                    $access = new AccessToken();
+                    $access->setSingleUseToken($token);
+                    $access->setPunchout(false);
+                    $access->setAttributes([
+                        'id' => $user->getId() ,
+                        'username' => $user->getUsername() ,
+                        'email' => $user->getEmail() ,
+                        'type' => $user->getType() ,
+                        'status' => $user->isEnabled() ,
+                        'delegate' => $user->isHasDelegate() ,
+                        'role' => $user->getCoreUserRoles()
+                    ]);
+                    $access->setCoreUser($user);
+                    $em->persist($access);
+                    $em->flush();
+                    $em->getConnection()->commit();
+                    return new JsonResponse('user n existe pas');
+   
+                } catch(Exception $e){
+                    $em->getConnection()->rollback();
+                    throw $e;
+                }
+            }
+        return new JsonResponse(['message' => 'invalid credentials . try again'], Response::HTTP_INTERNAL_SERVER_ERROR); 
+    }
+
+    
+
     #[Route(path: '/logout', name: 'app_logout')]
     public function logout(): void
     {
@@ -44,14 +126,6 @@ class SecurityController extends AbstractController
     } */
 
     
-    #[Route(path: '/api/login', name: 'app_login_api',methods: ['GET'])]
-    public function tokenDetails(): Response
-    {
-         return new Response(
-           
-            'message'
-         );
-    }
-
+   
    
 }

@@ -20,7 +20,7 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups( [ 'coreuser:read' , 'coreorganization:read' ] )]
+    #[Groups( [ 'coreuser:read'] )]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
@@ -34,7 +34,7 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: 'Email is required !')]
-    #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
+    #[Groups([ 'coreuser:read' ])]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
@@ -125,7 +125,7 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
     #[ORM\ManyToMany(targetEntity: CoreOrganization::class)]
     #[ORM\JoinTable(name: 'core_user_organization')]
     #[ORM\JoinColumn(name: 'core_user_additional_id', referencedColumnName: 'id')]
-    #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
+    #[Groups([ 'coreuser:read' ])]
     private Collection $organizations;
 
     #[ORM\OneToMany(mappedBy: 'coreUser', targetEntity: CoreUserAgencies::class, orphanRemoval: true)]
@@ -144,6 +144,9 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
     #[Groups('coreuser:read')]
     private Collection $coreUserRoles;
 
+    #[ORM\OneToMany(mappedBy: 'coreUser', targetEntity: AccessToken::class, orphanRemoval: true)]
+    private Collection $accessTokens;
+
     /* #[ORM\OneToMany(mappedBy: 'creatorId', targetEntity: CoreAgency::class, orphanRemoval: true)]
     private Collection $agencies; */
 
@@ -161,6 +164,7 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
         $this->hasDelegate = false ;
         $this->locale = 'en';
         $this->coreUserRoles = new ArrayCollection();
+        $this->accessTokens = new ArrayCollection();
         
     }
     
@@ -635,6 +639,36 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($coreUserRole->getCoreUser() === $this) {
                 $coreUserRole->setCoreUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, AccessToken>
+     */
+    public function getAccessTokens(): Collection
+    {
+        return $this->accessTokens;
+    }
+
+    public function addAccessToken(AccessToken $accessToken): self
+    {
+        if (!$this->accessTokens->contains($accessToken)) {
+            $this->accessTokens->add($accessToken);
+            $accessToken->setCoreUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAccessToken(AccessToken $accessToken): self
+    {
+        if ($this->accessTokens->removeElement($accessToken)) {
+            // set the owning side to null (unless already changed)
+            if ($accessToken->getCoreUser() === $this) {
+                $accessToken->setCoreUser(null);
             }
         }
 

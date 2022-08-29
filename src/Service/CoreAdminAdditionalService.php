@@ -43,7 +43,13 @@ class CoreAdminAdditionalService
             $request->query->getInt('page', 1)/*page number*/,
             3/*limit per page*/
         );
-        $p = $this->serializer->serialize($pagination, 'json',['groups' => 'coreuser:read']);
+        $p = $this->serializer->serialize($pagination, 'json',[ 
+        'groups' =>
+            'coreuser:read' ,
+            'corecountry:read' , 
+            'coreorganization:read' , 
+            'corerole:read'
+    ]);
         return $p;
         
     }

@@ -16,22 +16,22 @@ class CoreOrganization
     #[ORM\GeneratedValue]
     #[ORM\Column]
     //#[Groups('coreuser:read')]
-    #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
+    //#[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    //#[Groups('coreuser:read')]
-    #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
+    #[Groups('coreorganization:read')]
+    //#[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?string $companyNumber = null;
 
     #[ORM\Column(length: 255)]
-    //#[Groups('coreuser:read')]
-    #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
+    #[Groups('coreorganization:read')]
+    //#[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?string $companyName = null;
 
     #[ORM\Column(nullable: true)]
     //#[Groups('coreuser:read')]
-    #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
+    //#[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?int $vat = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -46,7 +46,7 @@ class CoreOrganization
 
     #[ORM\Column(length: 255, nullable: true)]
     //#[Groups('coreuser:read')]
-    #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
+    //#[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?string $status = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -140,7 +140,7 @@ class CoreOrganization
 
     #[ORM\Column]
     //#[Groups('coreuser:read')]
-    #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
+    //#[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?bool $enabled = null;
 
     #[ORM\Column(nullable: true)]
@@ -161,7 +161,7 @@ class CoreOrganization
     #[ORM\ManyToOne(inversedBy: 'coreOrganizations')]
     #[ORM\JoinColumn(name: 'assigned_to', referencedColumnName: 'id')]
     //#[Groups('coreuser:read')]
-    #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
+    //#[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?CoreUser $assignedTo = null;
 
     #[ORM\OneToMany(mappedBy: 'coreOrganization', targetEntity: CoreAgency::class, orphanRemoval: true)]
