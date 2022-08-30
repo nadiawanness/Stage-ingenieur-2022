@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\CoreUserAgenciesRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: CoreUserAgenciesRepository::class)]
 class CoreUserAgencies
@@ -11,12 +12,15 @@ class CoreUserAgencies
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups('coreuser:read')]
     private ?int $id = null;
 
     #[ORM\Column]
+    #[Groups('coreuser:read')]
     private ?bool $isDefault = null;
 
     #[ORM\Column]
+    #[Groups('coreuser:read')]
     private ?bool $enabled = null;
 
     #[ORM\Column]

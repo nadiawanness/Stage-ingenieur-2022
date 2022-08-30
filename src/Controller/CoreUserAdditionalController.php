@@ -264,7 +264,23 @@ class CoreUserAdditionalController extends AbstractController
         
                 $token = $this->container->get('security.token_storage')->getToken();
                 $user = $token->getUser();
-                return $this->json($user);
+                return  $this->json(
+                        $user ,
+                        '200' ,
+                        [] ,
+                        [
+                            ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER => 
+                            function($organisation){
+                                return 
+                                //$role->addUser($role->getUsers());
+                                //$role->getUsers();
+                                //$user->getEmail();
+                                //$organisation->getCompanyName();
+                                'nadia' ;
+                                //$role->getNom();
+                            }
+                        ] 
+            );
       
     }
 

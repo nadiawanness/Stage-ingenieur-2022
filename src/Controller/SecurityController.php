@@ -48,66 +48,69 @@ class SecurityController extends AbstractController
     {
         $user = $userRepo->find($idUser);
         $access = $accessRepo->findByUser($user->getId());
-        $token = $JWTManager->create($user);
-        $list = $access->getCoreUser();
-        /* foreach($list as $list)
-            {
-              $id = $list->getId();
-            } 
-
-            dd($id); */ 
-       /* if($user->getId() == $x->getId())
+        $idUserAccess = 0 ;
+        foreach($access as $access)
         {
-            $em->getConnection()->beginTransaction();
-            try{
-            
-                $access->setSingleUseToken($token);
-                $em->persist($access);
-                $em->flush();
-                $em->getConnection()->commit();
-            
-
-            
-            } catch(Exception $e){
-                $em->getConnection()->rollback();
-                throw $e;
-            } 
-
-    }
-    else return 'does not exist' ; */
+            $idUserAccess = $access->getCoreUser()->getId();
+        }
+        $token = $JWTManager->create($user);
         if($user instanceof CoreUser)
             {
-                $token = $JWTManager->create($user); 
-                $em->getConnection()->beginTransaction();
-                try{
+                if($idUserAccess == $user->getId())
+                    {
+                        $em->getConnection()->beginTransaction();
+                        try{
+                            $access->setSingleUseToken($token);
+                            $em->flush();
+                            $em->getConnection()->commit();
+                            return new JsonResponse([
+                                'token' => $token ,
+                                'userEmail' => $user->getEmail()
+                            ]);
+           
+                        } catch(Exception $e){
+                            $em->getConnection()->rollback();
+                            throw $e;
+                        }
+                    }
+                    else 
+                    {
+                        $em->getConnection()->beginTransaction();
+                        try{
 
-                    $access = new AccessToken();
-                    $access->setSingleUseToken($token);
-                    $access->setPunchout(false);
-                    $access->setAttributes([
-                        'id' => $user->getId() ,
-                        'username' => $user->getUsername() ,
-                        'email' => $user->getEmail() ,
-                        'type' => $user->getType() ,
-                        'status' => $user->isEnabled() ,
-                        'delegate' => $user->isHasDelegate() ,
-                        'role' => $user->getCoreUserRoles()
-                    ]);
-                    $access->setCoreUser($user);
-                    $em->persist($access);
-                    $em->flush();
-                    $em->getConnection()->commit();
-                    return new JsonResponse('user n existe pas');
-   
-                } catch(Exception $e){
-                    $em->getConnection()->rollback();
-                    throw $e;
-                }
+                            $accessNew = new AccessToken();
+                            $accessNew->setSingleUseToken($token);
+                            $accessNew->setPunchout(false);
+                            $accessNew->setAttributes([
+                                'id' => $user->getId() ,
+                                'username' => $user->getUsername() ,
+                                'email' => $user->getEmail() ,
+                                'type' => $user->getType() ,
+                                'status' => $user->isEnabled() ,
+                                'delegate' => $user->isHasDelegate() ,
+                                'role' => $user->getCoreUserRoles()
+                            ]);
+                            $accessNew->setCoreUser($user);
+                            $em->persist($accessNew);
+                            $em->flush();
+                            $em->getConnection()->commit();
+                            return new JsonResponse([
+                                'token' => $token ,
+                                'userEmail' => $user->getEmail()
+                            ]);
+    
+                        } catch(Exception $e){
+                            $em->getConnection()->rollback();
+                            throw $e;
+                        }
+
+                    }
+  
             }
         return new JsonResponse(['message' => 'invalid credentials . try again'], Response::HTTP_INTERNAL_SERVER_ERROR); 
     }
 
-    
+
 
     #[Route(path: '/logout', name: 'app_logout')]
     public function logout(): void
