@@ -157,7 +157,7 @@ class CoreUserAdditionalService
         
         
         $role = $this->roleRepo->find($idRole);
-        
+        dd($role);
         if($role instanceof CoreRole) //step1 : verify the existance of the role
             {
                 if($role->isEnabled()) //verify if the agency is enabled or not
@@ -213,11 +213,10 @@ class CoreUserAdditionalService
                         { 
                             $p = $this->serializer->serialize($user, 'json');
                             return $p ;
-                       }
+                        }
                     else 
                         return new JsonResponse(['message' => 'this user should be core_user_additional type .'],
                          Response::HTTP_INTERNAL_SERVER_ERROR); 
-
                 }
             else 
                 return new JsonResponse(['message' => 'this user does not exist .'], Response::HTTP_INTERNAL_SERVER_ERROR);

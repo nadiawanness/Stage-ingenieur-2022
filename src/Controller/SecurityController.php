@@ -47,15 +47,18 @@ class SecurityController extends AbstractController
     )
     {
         $user = $userRepo->find($idUser);
-        $access = $accessRepo->findByUser($user->getId());
-        $idUserAccess = 0 ;
-        foreach($access as $access)
-        {
-            $idUserAccess = $access->getCoreUser()->getId();
-        }
-        $token = $JWTManager->create($user);
+
         if($user instanceof CoreUser)
-            {
+            {   
+                $token = $JWTManager->create($user);
+                $access = $accessRepo->findByUser($user->getId());
+                //$idUserAccess = 0 ;
+                foreach($access as $access)
+                {
+                            $idUserAccess = $access->getCoreUser()->getId();
+                }
+
+
                 if($idUserAccess == $user->getId())
                     {
                         $em->getConnection()->beginTransaction();
@@ -64,8 +67,10 @@ class SecurityController extends AbstractController
                             $em->flush();
                             $em->getConnection()->commit();
                             return new JsonResponse([
+                                'notice' => 'new token for an old user' ,
                                 'token' => $token ,
-                                'userEmail' => $user->getEmail()
+                                'userEmail' => $user->getEmail() ,
+                                'userType' => $user->getType()
                             ]);
            
                         } catch(Exception $e){
@@ -77,7 +82,6 @@ class SecurityController extends AbstractController
                     {
                         $em->getConnection()->beginTransaction();
                         try{
-
                             $accessNew = new AccessToken();
                             $accessNew->setSingleUseToken($token);
                             $accessNew->setPunchout(false);
@@ -95,8 +99,10 @@ class SecurityController extends AbstractController
                             $em->flush();
                             $em->getConnection()->commit();
                             return new JsonResponse([
+                                'notice' => 'new token for a new user' ,
                                 'token' => $token ,
-                                'userEmail' => $user->getEmail()
+                                'userEmail' => $user->getEmail() ,
+                                'userType' => $user->getType()
                             ]);
     
                         } catch(Exception $e){
@@ -107,7 +113,8 @@ class SecurityController extends AbstractController
                     }
   
             }
-        return new JsonResponse(['message' => 'invalid credentials . try again'], Response::HTTP_INTERNAL_SERVER_ERROR); 
+        else 
+            return new JsonResponse(['message' => 'invalid credentials . try again'], Response::HTTP_INTERNAL_SERVER_ERROR); 
     }
 
 
