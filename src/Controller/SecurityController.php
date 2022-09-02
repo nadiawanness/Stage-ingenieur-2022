@@ -8,6 +8,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 use App\Service\CoreAdminAdditionalService;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Serializer\SerializerInterface;
 use App\Entity\CoreUser;
 use App\Entity\AccessToken;
 use App\Repository\CoreUserRepository;
@@ -42,23 +43,33 @@ class SecurityController extends AbstractController
         AccessTokenRepository $accessRepo ,
         Request $request , 
         $idUser , 
+        //SerializerInterface $serializer ,
         JWTTokenManagerInterface $JWTManager ,
         EntityManagerInterface $em 
     )
     {
         $user = $userRepo->find($idUser);
+        
+        /* $jsonRecu = $request->getContent();
+        if (!empty($jsonRecu))
+            {
+                $params = json_decode($jsonRecu, true); // 2nd param to get as array
+                
+                //dd($params->get('email')); // tu devrais voir apparaître ici le JSON sous forme de tableau associatif PHP
+                //var_dump($params); // tu devrais voir apparaître ici le JSON sous forme de tableau associatif PHP
+            } 
+        //dd($jsonRecu); 
+        $user = $serializer->deserialize($jsonRecu, CoreUser::class,'json'); */
 
         if($user instanceof CoreUser)
             {   
                 $token = $JWTManager->create($user);
                 $access = $accessRepo->findByUser($user->getId());
-                //$idUserAccess = 0 ;
+                $idUserAccess = 0 ;
                 foreach($access as $access)
-                {
-                            $idUserAccess = $access->getCoreUser()->getId();
-                }
-
-
+                    {
+                        $idUserAccess = $access->getCoreUser()->getId();
+                    }
                 if($idUserAccess == $user->getId())
                     {
                         $em->getConnection()->beginTransaction();
@@ -72,13 +83,13 @@ class SecurityController extends AbstractController
                                 'userEmail' => $user->getEmail() ,
                                 'userType' => $user->getType()
                             ]);
-           
+
                         } catch(Exception $e){
                             $em->getConnection()->rollback();
                             throw $e;
                         }
                     }
-                    else 
+                else 
                     {
                         $em->getConnection()->beginTransaction();
                         try{

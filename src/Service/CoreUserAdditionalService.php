@@ -52,16 +52,6 @@ class CoreUserAdditionalService
         
     }
 
-    /* public function getByOrganization($value)
-    {
-        /* $org = $this->orgRepo->findAll();
-        dd($org = $this->orgRepo->findAll()); 
-        $org = $this->orgRepo->findByOrg($value);
-        $p = $this->serializer->serialize($org , 'json',['groups' => 'coreorganization:read']);
-        //dd($this->orgRepo->findAll());
-        return $p;
-    } */
-
     public function getByOrganization($admin)
     {
         $user = $this->userRepo->findByOrg($admin);
@@ -108,7 +98,7 @@ class CoreUserAdditionalService
             }
 
         else 
-            return new JsonResponse(['message' => 'this country does not exist .'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['message' => 'this country does not exist .'], Response::HTTP_NOT_FOUND);
       
 
         $organization  = $this->orgRepo->find($idOrganization);
@@ -129,7 +119,7 @@ class CoreUserAdditionalService
 
                 }
             else 
-                return new JsonResponse(['message' => 'this organization does not exist .'], Response::HTTP_INTERNAL_SERVER_ERROR);
+                return new JsonResponse(['message' => 'this organization does not exist .'], Response::HTTP_NOT_FOUND);
         
                 
         $agency = $this->agencyRepo->find($idAgency);
@@ -153,7 +143,7 @@ class CoreUserAdditionalService
                     return new JsonResponse(['message' => 'this agency does not belong to the chosen organisation .'], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         else 
-            return new JsonResponse(['message' => 'this agency does not exist .'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['message' => 'this agency does not exist .'], Response::HTTP_NOT_FOUND);
         
         
         $role = $this->roleRepo->find($idRole);
@@ -172,7 +162,7 @@ class CoreUserAdditionalService
                     return new JsonResponse(['message' => 'this role is disabled .'], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         else 
-            return new JsonResponse(['message' => 'this role does not exist .'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['message' => 'this role does not exist .'], Response::HTTP_NOT_FOUND);
 
             $user->setRoles([]);
             
@@ -192,6 +182,43 @@ class CoreUserAdditionalService
             $em->getConnection()->rollback();
             throw $e;
         }
+    }
+
+    public function editSimpleUser(
+        Request $request ,
+        $idUser 
+    )
+    {
+        $user = $this->userRepo->find($idUser);
+
+        if (empty($user)) {
+            return new JsonResponse(['message' => 'User not found .try again !'], Response::HTTP_NOT_FOUND);
+        }
+                // $jsonRecu = $request->getContent();
+                $donnees = json_decode($request->getContent());
+                //dd($donnees->username);
+                if($user->getType() == 'core_user_additional')
+                    {
+                        $this->em->getConnection()->beginTransaction();
+                        try {
+                                //$user = $this->serializer->deserialize($jsonRecu, CoreUser::class,'json');
+                                $user->setUsername($donnees->username);
+                                $user->setUsernameCanonical($donnees->usernameCanonical);
+                                $user->setEmail($donnees->email);
+                                $user->setEmailCanonical($donnees->emailCanonical);
+                                $user->setCivility($donnees->civility);
+                                $this->em->flush();
+                                $this->em->getConnection()->commit();
+                                return $user;
+
+                            } catch(Exception $e){
+                                $em->getConnection()->rollback();
+                                throw $e;
+                            }
+                    }
+                else
+                    return new JsonResponse(['message' => 'must be of type core_user_additional . try again '],
+                    Response::HTTP_INTERNAL_SERVER_ERROR);
     }
 
    
@@ -216,10 +243,10 @@ class CoreUserAdditionalService
                         }
                     else 
                         return new JsonResponse(['message' => 'this user should be core_user_additional type .'],
-                         Response::HTTP_INTERNAL_SERVER_ERROR); 
+                        Response::HTTP_INTERNAL_SERVER_ERROR); 
                 }
             else 
-                return new JsonResponse(['message' => 'this user does not exist .'], Response::HTTP_INTERNAL_SERVER_ERROR);
+                return new JsonResponse(['message' => 'this user does not exist .'], Response::HTTP_NOT_FOUND);
         
         } catch(Exception $e){
           $em->getConnection()->rollback();
@@ -227,160 +254,53 @@ class CoreUserAdditionalService
             }
     }
 
-    public function disableUser($idUser, $value)
-    {
+    public function changeStatusUser($idUser,Request $request){
+
         $user = $this->userRepo->find($idUser);
+        $donnees = json_decode($request->getContent());
+        //dd($donnees->enabled == false);
         $this->em->getConnection()->beginTransaction();
         try{
-            if($user->getType() == 'core_user_additional')
-            {
-                if($user->isEnabled() && ($value == 0 | $value == false) )
-                {
-                    /* if($value == 0 | $value == false)
-                    { */
-                        $user->setEnabled($value);
-                        $this->em->flush();
-                        $this->em->getConnection()->commit();
-                        return $user;
-                    /*}
-                    else 
-                    {
-                        return 'A boolean value should be given to this field ! ' ;
-                    }*/
-                }
-                else 
-                
-                    return new JsonResponse(
-                        [
-                            'error' => '400' ,
-                            'message' => 'User is already disabled or a boolean should be given ! Verify please !'
-                        ]
-                    );
-                
-            }
 
-            else 
-        
-                return new JsonResponse(
-                    [
-                        'error' => '400' ,
-                        'message' => 'The user should be with a core_user_additional type !'
-                    ]
-                );
-
-        }catch(Exception $e)
-        {
-            $em->getConnection()->rollback();
-            throw $e;
-        }
-    }
-
-    /* public function userExist(
-        $idUser
-    )
-    {
-        $user = $this->userRepo->find($idUser);
-        $coreUser = new CoreUser();
-        dd($coreUser->getMyCollectionValues()->contains($user));
-    } */
-
-    public function enableUser($idUser,$value)
-    {
-        $user = $this->userRepo->find($idUser);
-        $this->em->getConnection()->beginTransaction();
-        try{
-            if($user->getType() == 'core_user_additional')
-                {   
-                    if(!($user->IsEnabled()) && ($value == 1 | $value == true) )
-                        {
-                            /* if($value == 1 | $value == true)
-                                { */
-                                    $user->setEnabled($value);
-                                    $this->em->flush();
-                                    $this->em->getConnection()->commit();
-                                    return $user;
-                               /*  }
-                            else  
-                                {
-                                    return 'A boolean value should be given to this field ! ' ;
-                                } */
-                        }
-
-                    else 
-                        
-                            return new JsonResponse(
-                                [
-                                    'error' => '400' ,
-                                    'message' => 'User is already enabled or a boolean should be given ! '
-                                ]
-                            );
-                        
-                }
-            else 
-             
-                    return new JsonResponse(
-                        [
-                            'error' => '400' ,
-                            'message' => 'The user should be with a core_user_additional type ! '
-                        ]
-                    );
-                
-
-        }catch(Exception $e)
-        {
-            $em->getConnection()->rollback();
-            throw $e;
-        }
-    }
-
-    public function changeStatusUser($idUser){
-
-        $user = $this->userRepo->find($idUser);
-        $this->em->getConnection()->beginTransaction();
-        try{
             if($user instanceof CoreUser)
                 {
                     if($user->getType() == 'core_user_additional')
                         {
-                            
-                        
-                            if($user->isEnabled() ) //verifier si le compte de user est active
+                            if($user->isEnabled() ) // verifier si le compte de user est active
                                 {
-                                    
-
-                                    $user->setEnabled(false); // s'il est active on le rend desactiver
-                                    $this->em->flush();
-                                    $this->em->getConnection()->commit();
-                                    return 
-                                        'user is disabled ! ' ;      
-                                
-                                    
+                                    if($donnees->enabled == false | $donnees->enabled == 0) // verifier si la valeur est false ou 0 pour ce cas 
+                                        {
+                                            $user->setEnabled($donnees->enabled); // s'il est active on le rend desactiver
+                                            $this->em->flush();
+                                            $this->em->getConnection()->commit();
+                                            return 
+                                                'user is disabled ! ' ;    
+                                        }
+                                    else 
+                                        return new JsonResponse(['message' => 'boolean value is required or is already enabled . try again'], Response::HTTP_INTERNAL_SERVER_ERROR);  
                                 }      
                             else if (!$user->isEnabled())
                                 {
-                                
-                                    $user->setEnabled(true); // s'il est active on le rend desactiver
-                                    $this->em->flush();
-                                    $this->em->getConnection()->commit();
-                                    return 
-                                        'user is enabled ! ' ;
-                                    
+                                    if($donnees->enabled == true | $donnees->enabled == 1) // verifier si la valeur est true ou 1 pour ce cas 
+                                        {
+                                            $user->setEnabled($donnees->enabled); // s'il est active on le rend desactiver
+                                            $this->em->flush();
+                                            $this->em->getConnection()->commit();
+                                            return 
+                                                'user is enabled ! ' ;    
+                                        }
+                                    else 
+                                        return new JsonResponse(['message' => 'boolean value is required or is already disabled . try again'], Response::HTTP_INTERNAL_SERVER_ERROR); 
                                 }   
                             else 
-                                return new JsonResponse(['message' => 'error . try again'], Response::HTTP_INTERNAL_SERVER_ERROR);
-                            
-                                
-                                
+                                return new JsonResponse(['message' => 'error . try again'], Response::HTTP_INTERNAL_SERVER_ERROR);  
                         }
-                    
 
                     else 
                         return new JsonResponse(['message' => 'this user should be a core_user_additional type .'], Response::HTTP_INTERNAL_SERVER_ERROR);
                 }
             else 
                 return new JsonResponse(['message' => 'this user does not exist .'], Response::HTTP_INTERNAL_SERVER_ERROR);
-                 
-            
 
         } catch(Exception $e){
             $em->getConnection()->rollback();
@@ -388,200 +308,5 @@ class CoreUserAdditionalService
         }
 
     }
-
-    /* public function changeStatusUser($idUser,bool $value){
-
-        $user = $this->userRepo->find($idUser);
-        $this->em->getConnection()->beginTransaction();
-        try{
-                 if($user->getType() == 'core_user_additional')
-                    {
-                        
-                        if(is_bool($value) )
-                            {
-                                if($user->isEnabled() && $value == false) //verifier si le compte de user est active
-                                    {
-                                        
-
-                                            $user->setEnabled($value); // s'il est active on le rend desactiver
-                                            $this->em->flush();
-                                            $this->em->getConnection()->commit();
-                                            return 
-                                                'user is disabled ! ' ;      
-                                      
-                                         
-                                    }      
-                                else if (!$user->isEnabled() && $value)
-                                    {
-                                      
-                                            $user->setEnabled(true); // s'il est active on le rend desactiver
-                                            $this->em->flush();
-                                            $this->em->getConnection()->commit();
-                                            return 
-                                                'user is enabled ! ' ;
-                                        
-                                    }   
-                            }
-
-                        else 
-                            return new JsonResponse(
-                                ['message' => "boolean value is required. please try again."],
-                                     Response::HTTP_INTERNAL_SERVER_ERROR);
-                               
-                            
-                    }
-                    
-
-                else 
-                    return new JsonResponse(
-                        ['message' => "user must be of type core_user_additional. please try again."],
-                             Response::HTTP_INTERNAL_SERVER_ERROR);
-            
-
-
-        } catch(Exception $e){
-            $em->getConnection()->rollback();
-            throw $e;
-        }
-    } */
-
-    /* public function changeStatusUser($idUser,$value){
-
-        $user = $this->userRepo->find($idUser);
-        $this->em->getConnection()->beginTransaction();
-        try{
-                 if($user->getType() == 'core_user_additional')
-                    {
-                        
-                               
-                                if($user->isEnabled() && $value == false) //verifier si le compte de user est active
-                                    {
-                                        
-                                                $user->setEnabled($value); // s'il est active on le rend desactiver
-                                                $this->em->flush();
-                                                $this->em->getConnection()->commit();
-                                         
-                                    }      
-                                else 
-                                       
-                                    return new JsonResponse(
-                                        [
-                                            'error' => '400' ,
-                                            'message' => 'User is already disabled  ! ' 
-                                        ]
-                                    );
-                                            
-                                        
-                            
-                                    }
-                    
-
-                else 
-                    return new JsonResponse(
-                        [
-                            'error' => '400' ,
-                            'message' => 'This is not a core_user_additional ! ' 
-                        ]
-                    );
-
-
-        } catch(Exception $e){
-            $em->getConnection()->rollback();
-            throw $e;
-        }
-    } */
-
-
-    public function changeStatusUser2($idUser,bool $value){
-        $user = $this->userRepo->find($idUser);
-        $this->em->getConnection()->beginTransaction();
-        try{
-                 if($user->getType() == 'core_user_additional')
-                    {
-                        //dd($user->isEnabled());
-                               
-                                if(!$user->isEnabled() ) //verifier si le compte de user est active
-                                    {
-                                        
-                                                $user->setEnabled(true); // s'il est active on le rend desactiver
-                                                $this->em->flush();
-                                                $this->em->getConnection()->commit();
-                                         
-                                    }      
-                                else 
-                                       
-                                    return new JsonResponse(
-                                        [
-                                            'error' => '400' ,
-                                            'message' => 'User is already enabled  ! ' 
-                                        ]
-                                    );
-                                            
-                                        
-                            
-                                    }
-                    
-
-                else 
-                    return new JsonResponse(
-                        [
-                            'error' => '400' ,
-                            'message' => 'This is not a core_user_additional ! ' 
-                        ]
-                    );
-
-
-        } catch(Exception $e){
-            $em->getConnection()->rollback();
-            throw $e;
-        }
-    }
-
-
-    /* public function enableUser($idUser){ // changer le nom : changeStatus
-        
-       $disabledUser = $this->userRepo->find($idUser);
-       $this->em->getConnection()->beginTransaction();
-       try{
-        if(!$disabledUser->IsEnabled()  ){
-            $disabledUser->setEnabled(true);
-            $this->em->flush();
-            $this->em->getConnection()->commit();
-            return $disabledUser;
-        }
-
-        else {
-            return 'user account is already enabled ' ;
-        } 
-
-    } catch(Exception $e){
-        $em->getConnection()->rollback();
-        throw $e;
-    }
-        
-    }
-
-    public function DisableUser($idUser){
-        
-        $disabledUser = $this->userRepo->find($idUser);
-        $this->em->getConnection()->beginTransaction();
-       try{
-         if($disabledUser->IsEnabled()){
-             $disabledUser->setEnabled(false);
-             $this->em->flush();
-             $this->em->getConnection()->commit();
-             return $disabledUser;
-         }
- 
-         else {
-             return 'user account is already disabled ' ;
-         } 
-
-        } catch(Exception $e){
-            $em->getConnection()->rollback();
-            throw $e;
-        }
-         
-     } */
 
     }

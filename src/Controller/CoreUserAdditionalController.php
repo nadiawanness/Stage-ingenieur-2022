@@ -120,15 +120,13 @@ class CoreUserAdditionalController extends AbstractController
         
     }
 
-    //disable
-    #[Route('/api/changeStatusUser/{idUser}',name: 'app_change_status_simple_user', methods: ['PATCH'])]
-    //#[IsGranted('ROLE_ADMIN',message: 'Sorry you are not allowed to enable a simple user account ! You need to get the admin role .')]
-    public function changeStatusSimpleUser(
+
+    #[Route('/api/putSimpleUser/{idUser}',name: 'app_put_simple_user',methods: ['PUT'])]
+    public function putSimpleUser(
         CoreUserAdditionalService $simpleUser ,
-        $idUser 
-    )
-    {
-      
+        Request $request ,
+        $idUser
+    ){
                 $role = $this->getUser()->getCoreUserRoles();
                 foreach ($role as $role)
                     {
@@ -137,8 +135,52 @@ class CoreUserAdditionalController extends AbstractController
 
                 if($roleAdmin == 'ROLE_ADMIN')
                     {
+                        return $this->json (
+                            $simpleUser->editSimpleUser($request,$idUser) ,
+                            201 ,
+                            [] ,
+                            [
+                                ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER => 
+                                function($organisation){
+                                    return 
+                                    //$role->addUser($role->getUsers());
+                                    //$role->getUsers();
+                                    //$user->getEmail();
+                                    //$organisation->getCompanyName();
+                                    'nadia' ;
+                                    //$role->getNom();
+                                }
+                            ]
+                        );
+                    }
+                else 
+                    return new JsonResponse(['message' => 'role admin is required . try again'],
+                    Response::HTTP_INTERNAL_SERVER_ERROR); 
+          
+        
+    }
+
+
+    //disable
+    #[Route('/api/changeStatusUser/{idUser}',name: 'app_change_status_simple_user', methods: ['PATCH'])]
+    //#[IsGranted('ROLE_ADMIN',message: 'Sorry you are not allowed to enable a simple user account ! You need to get the admin role .')]
+    public function changeStatusSimpleUser(
+        CoreUserAdditionalService $simpleUser ,
+        $idUser ,
+        Request $request
+    )
+    {
+      
+                $role = $this->getUser()->getCoreUserRoles();
+                foreach ($role as $role)
+                    {
+                        $roleAdmin = $role->getCoreRole()->getName();
+                    }
+                    
+                if($roleAdmin == 'ROLE_ADMIN')
+                    {
                                 return $this->json(
-                                 $simpleUser->changeStatusUser($idUser) ,
+                                 $simpleUser->changeStatusUser($idUser,$request) ,
                                    '200' ,
                                  [] ,
                             [
@@ -188,7 +230,7 @@ class CoreUserAdditionalController extends AbstractController
                             [
                                 ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER => 
                                 function($organisation){
-                                    return 
+                                    return
                                     //$role->addUser($role->getUsers());
                                     //$role->getUsers();
                                     //$user->getEmail();
@@ -201,7 +243,7 @@ class CoreUserAdditionalController extends AbstractController
                     }
                 else 
                     return new JsonResponse(['message' => 'role admin is required . try again'],
-                    Response::HTTP_INTERNAL_SERVER_ERROR); 
+                    Response::HTTP_INTERNAL_SERVER_ERROR);
     
        
         
@@ -284,25 +326,6 @@ class CoreUserAdditionalController extends AbstractController
       
     }
 
-    /* #[Route('/api/getSimpleUserByOrganization/{organisation}',name: 'app_get_user_by_organization',methods: ['GET'])]
-    public function getUserByOrganization(
-        CoreUserRepository $userRepo ,
-        $organisation
-    )
-    {
-        if($this->container->get('security.authorization_checker')->isGranted('ROLE_ADMIN'))
-            {
-                $user = $userRepo->findByOrganization($organisation);
-                $p = $this->serializer->serialize($user, 'json');
-                return $this->json($p);
-            }
-        else 
-            return $this->json([
-               "code" => "400",
-               "messsage" => "Role admin is required ! "
-           ]); 
-    } */
-
     #[Route('/api/getUserById/{idUser}',name: 'app_user_by_id',methods: ['GET'])]
     public function getUserById(
 
@@ -341,29 +364,5 @@ class CoreUserAdditionalController extends AbstractController
                     Response::HTTP_INTERNAL_SERVER_ERROR); 
       
     }
-
-   /* #[Route('/api/userExist/{idUser}',name: 'app_user_by_id',methods: ['GET'])]
-    public function userExist(
-        CoreUserAdditionalService $simpleUser ,
-        $idUser ,
-        CoreUserRepository $userRepo
-    )
-    {
-       
-                if($this->container->get('security.authorization_checker')->isGranted('ROLE_ADMIN'))
-                    {
-                        $user = $userRepo->find($idUser);
-                        //$coreUser = new CoreUser();
-                        dd($entity->getMyCollectionValues()->contains($user));
-                        //return new Response($simpleUser->userExist($idUser));
-                    }
-                else 
-                    return $this->json([
-                       "code" => "400",
-                       "messsage" => "Role admin is required ! "
-                   ]); 
-      
-    } */
-
 
 }
