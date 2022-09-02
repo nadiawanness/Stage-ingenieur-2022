@@ -47,15 +47,105 @@ class CoreUserAdditionalService
             $request->query->getInt('page', 1)/*page number*/,
             3/*limit per page*/
         );
-        $p = $this->serializer->serialize($pagination, 'json');
+        $p = $this->serializer->serialize($pagination, 'json',
+            [ 
+                'groups' =>
+                    'coreuser:read' ,
+                    'corecountry:read' , 
+                    'coreorganization:read' , 
+                    'corerole:read'
+            ]
+    );
         return $p;
+        
+    }
+
+    /* public function searchSimpleUser(Request $request ,
+    $emailUser
+    ){
+
+        $user = $this->userRepo->searchByEmail($emailUser);
+            foreach($user as $user)
+                {
+                    $type = $user->getType();
+                }
+
+                //dd($type);
+
+            if( $type == 'core_user_additional' )
+                    {
+                        $pagination = $this->paginator->paginate(
+                            $user, // query NOT result
+                            $request->query->getInt('page', 1) , // page number
+                            3 // limit per page
+                        );
+                        $p = $this->serializer->serialize($pagination, 'json',
+                            [ 
+                                'groups' =>
+                                    'coreuser:read' ,
+                                    'corecountry:read' , 
+                                    'coreorganization:read' , 
+                                    'corerole:read'
+                            ]
+                        );
+                            return $p;
+                    }
+                else 
+                    return new JsonResponse(['message' => 'user type must be core_user_additional . try again .'], Response::HTTP_NOT_FOUND);
+           
+        
+        
+    } */
+
+    public function searchSimpleUser(Request $request , 
+    CoreUser $admin
+    ){
+        $donnees = json_decode($request->getContent());
+        //dd($donnees);
+        $user = $this->userRepo->findByOrg($admin,$donnees->email,true);
+        dd($user);
+            foreach($user as $user)
+                {
+                    $type = $user->getType();
+                }
+
+            if( $type == 'core_user_additional' )
+                    {
+                        $pagination = $this->paginator->paginate(
+                            $user, // query NOT result
+                            $request->query->getInt('page', 1) , // page number
+                            3 // limit per page
+                        );
+                        $p = $this->serializer->serialize($pagination, 'json',
+                            [ 
+                                'groups' =>
+                                    'coreuser:read' ,
+                                    'corecountry:read' , 
+                                    'coreorganization:read' , 
+                                    'corerole:read'
+                            ]
+                        );
+                            return $p;
+                    }
+                else 
+                    return new JsonResponse(['message' => 'user type must be core_user_additional . try again .'], Response::HTTP_NOT_FOUND);
+           
+        
         
     }
 
     public function getByOrganization($admin)
     {
-        $user = $this->userRepo->findByOrg($admin);
-        $p = $this->serializer->serialize($user , 'json',['groups' => 'coreorganization:read']);
+        $user = $this->userRepo->findByOrg($admin,null,false);
+        //dd($user);
+        $p = $this->serializer->serialize($user , 'json',[ 
+            'groups' =>
+                'coreuser:read' ,
+                'corecountry:read' , 
+                'coreorganization:read' , 
+                'corerole:read'
+        ]
+    );
         return $p;
     }
   
@@ -98,7 +188,7 @@ class CoreUserAdditionalService
             }
 
         else 
-            return new JsonResponse(['message' => 'this country does not exist .'], Response::HTTP_NOT_FOUND);
+            return new JsonResponse(['message' => 'this country does not exist .'], Response::HTTP_BAD_REQUEST);
       
 
         $organization  = $this->orgRepo->find($idOrganization);
@@ -119,7 +209,7 @@ class CoreUserAdditionalService
 
                 }
             else 
-                return new JsonResponse(['message' => 'this organization does not exist .'], Response::HTTP_NOT_FOUND);
+                return new JsonResponse(['message' => 'this organization does not exist .'], Response::HTTP_BAD_REQUEST);
         
                 
         $agency = $this->agencyRepo->find($idAgency);
@@ -143,7 +233,7 @@ class CoreUserAdditionalService
                     return new JsonResponse(['message' => 'this agency does not belong to the chosen organisation .'], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         else 
-            return new JsonResponse(['message' => 'this agency does not exist .'], Response::HTTP_NOT_FOUND);
+            return new JsonResponse(['message' => 'this agency does not exist .'], Response::HTTP_BAD_REQUEST);
         
         
         $role = $this->roleRepo->find($idRole);
@@ -162,7 +252,7 @@ class CoreUserAdditionalService
                     return new JsonResponse(['message' => 'this role is disabled .'], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         else 
-            return new JsonResponse(['message' => 'this role does not exist .'], Response::HTTP_NOT_FOUND);
+            return new JsonResponse(['message' => 'this role does not exist .'], Response::HTTP_BAD_REQUEST);
 
             $user->setRoles([]);
             
@@ -190,23 +280,43 @@ class CoreUserAdditionalService
     )
     {
         $user = $this->userRepo->find($idUser);
+        //dd($user instanceof CoreUser);
 
         if (empty($user)) {
-            return new JsonResponse(['message' => 'User not found .try again !'], Response::HTTP_NOT_FOUND);
+            return new JsonResponse(['message' => 'User not found .try again !'], Response::HTTP_BAD_REQUEST);
         }
-                // $jsonRecu = $request->getContent();
                 $donnees = json_decode($request->getContent());
-                //dd($donnees->username);
                 if($user->getType() == 'core_user_additional')
                     {
                         $this->em->getConnection()->beginTransaction();
                         try {
-                                //$user = $this->serializer->deserialize($jsonRecu, CoreUser::class,'json');
-                                $user->setUsername($donnees->username);
+                                /* $user->setUsername($donnees->username);
                                 $user->setUsernameCanonical($donnees->usernameCanonical);
                                 $user->setEmail($donnees->email);
                                 $user->setEmailCanonical($donnees->emailCanonical);
+                                $user->setSalt($donnees->salt);
+                                //$user->setLastLogin($donnees->lastLogin);
+                                //$user->setConfirmationToken($donnees->confirmationToken);
+                                //$user->setPasswordRequestedAt($donnees->passwordRequestedAt);
+                                $user->setLocale($donnees->locale);
+                                $user->setFirstName($donnees->firstName);
+                                $user->setLastName($donnees->lastName);
+                                $user->setFunctionUser($donnees->functionUser);
+                                $user->setPhone($donnees->phone);
                                 $user->setCivility($donnees->civility);
+                                //$user->setType($donnees->type);
+                                $user->setIdErp($donnees->idErp);
+                                //$user->setConfirmPassword($donnees->confirmPassword);
+                                //$user->setEnabled($donnees->enabled);
+                                //$user->setHasDelegate($donnees->hasDelegate);
+                                $user->setUpdatedAt(new \DateTimeImmutable()); */
+
+                                setAttributes($user,$donnees->username,$donnees->usernameCanonical,$donnees->email,$donnees->emailCanonical,
+                                $donnees->salt,$donnees->locale,$donnees->firstName,$donnees->lastName,$donnees->functionUser,$donnees->phone,
+                                $donnees->civility,$donnees->idErp);
+                                $user->setUpdatedAt(new \DateTimeImmutable());
+                            
+
                                 $this->em->flush();
                                 $this->em->getConnection()->commit();
                                 return $user;
@@ -222,6 +332,50 @@ class CoreUserAdditionalService
     }
 
    
+    public function setAttributes(CoreUser $user ,
+    //array $attributes
+    $username ,
+    $usernameCanonical ,
+    $email ,
+    $emailCanonical ,
+    $salt ,
+    $locale ,
+    $firstName ,
+    $lastName ,
+    $functionUser ,
+    $phone ,
+    $civility ,
+    $idErp 
+    )
+    {
+       $user->setUsername($username);
+        $user->setUsernameCanonical($usernameCanonical);
+        $user->setEmail($email);
+        $user->setEmailCanonical($emailCanonical);
+        $user->setSalt($salt);
+        $user->setLocale($locale);
+        $user->setFirstName($firstName);
+        $user->setLastName($lastName);
+        $user->setFunctionUser($functionUser);
+        $user->setPhone($phone);
+        $user->setCivility($civility);
+        $user->setIdErp($idErp);
+
+        /* $attributes = [
+            $user->setUsername($username) , 
+            $user->setUsernameCanonical($usernameCanonical) , 
+            $user->setEmail($email) ,
+            $user->setEmailCanonical($emailCanonical) ,
+            $user->setSalt($salt) ,
+            $user->setLocale($locale) ,
+            $user->setFirstName($firstName) ,
+            $user->setLastName($lastName) ,
+            $user->setFunctionUser($functionUser) ,
+            $user->setPhone($phone) ,
+            $user->setCivility($civility) ,
+            $user->setIdErp($idErp) 
+        ]; */
+    }
 
     public function getSimpleUserById($idUser)
     {
@@ -246,7 +400,7 @@ class CoreUserAdditionalService
                         Response::HTTP_INTERNAL_SERVER_ERROR); 
                 }
             else 
-                return new JsonResponse(['message' => 'this user does not exist .'], Response::HTTP_NOT_FOUND);
+                return new JsonResponse(['message' => 'this user does not exist .'], Response::HTTP_BAD_REQUEST);
         
         } catch(Exception $e){
           $em->getConnection()->rollback();

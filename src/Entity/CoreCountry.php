@@ -16,7 +16,7 @@ class CoreCountry
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups('corecountry:read')]
+    #[Groups([ 'coreuser:read' , 'corecountry:read' ])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255, nullable: true)]

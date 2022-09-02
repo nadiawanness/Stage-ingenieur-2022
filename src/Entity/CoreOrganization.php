@@ -20,13 +20,13 @@ class CoreOrganization
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups('coreorganization:read')]
+    //#[Groups('coreorganization:read')]
     //#[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?string $companyNumber = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups('coreorganization:read')]
-    //#[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
+    //#[Groups('coreorganization:read')]
+    #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?string $companyName = null;
 
     #[ORM\Column(nullable: true)]

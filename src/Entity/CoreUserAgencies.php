@@ -12,15 +12,15 @@ class CoreUserAgencies
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups('coreuser:read')]
+    //#[Groups('coreuser:read')]
     private ?int $id = null;
 
     #[ORM\Column]
-    #[Groups('coreuser:read')]
+    //#[Groups('coreuser:read')]
     private ?bool $isDefault = null;
 
     #[ORM\Column]
-    #[Groups('coreuser:read')]
+    //#[Groups('coreuser:read')]
     private ?bool $enabled = null;
 
     #[ORM\Column]
@@ -35,6 +35,7 @@ class CoreUserAgencies
 
     #[ORM\ManyToOne(inversedBy: 'coreUserAgencies')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups('coreuser:read')]
     private ?CoreAgency $coreAgency = null; 
 
     public function __construct()

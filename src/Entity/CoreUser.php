@@ -133,7 +133,7 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
     private Collection $coreUserAgencies;
 
     #[ORM\OneToMany(mappedBy: 'assignedTo', targetEntity: CoreOrganization::class)]
-    #[Groups('coreuser:read')]
+    //#[Groups('coreuser:read')]
     private Collection $coreOrganizations;
     
     #[Groups('coreuser:read')]

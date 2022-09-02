@@ -17,7 +17,7 @@ class CoreRole
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups('corerole:read')]
+    #[Groups([ 'coreuser:read' , 'corerole:read' ])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255, nullable: true)]

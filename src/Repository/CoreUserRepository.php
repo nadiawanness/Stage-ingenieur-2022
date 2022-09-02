@@ -51,28 +51,65 @@ class CoreUserRepository extends ServiceEntityRepository
    ;
    }
 
-   public function findByOrg($admin): array 
+   public function findByOrg($admin ,$email,$search): array
    {
     $page = 1 ;
     $pageSize = 100 ;
-        return $this->createQueryBuilder('user')
-            ->select('user')
-            ->leftJoin('user.organizations','org')
-            ->andWhere('user.type = :type')
-            ->andWhere('org.assignedTo = :idadmin')
-            ->andWhere('org.status = :status')
-            ->andWhere('org.enabled = :enabled')
-            ->setParameter('type','core_user_additional')
-            ->setParameter('idadmin',$admin)
-            ->setParameter('status','valid')
-            ->setParameter('enabled','1')
-            ->orderBy('user.id','DESC')
-            ->setFirstResult($pageSize * ($page-1))
-            ->setMaxResults($pageSize)
-            ->getQuery()
-            ->getResult() 
-            ;
+    $search = false ;
+
+        $qb = $this->createQueryBuilder('user')
+        ->select('user')
+        ->leftJoin('user.organizations','org')
+        ->andWhere('user.type = :type')
+        ->andWhere('org.assignedTo = :idadmin')
+        ->andWhere('org.status = :status')
+        ->andWhere('org.enabled = :enabled')
+        ->setParameter('type','core_user_additional')
+        ->setParameter('idadmin',$admin)
+        ->setParameter('status','valid')
+        ->setParameter('enabled','1')
+        /* ->orderBy('user.id','DESC')
+        ->setFirstResult($pageSize * ($page-1))
+        ->setMaxResults($pageSize) 
+        ->getQuery()
+        ->getResult() */
+        ; 
+            
+            if($search)
+                {
+                    return $qb 
+                        ->orderBy('user.id','DESC')
+                        ->setFirstResult($pageSize * ($page-1))
+                        ->setMaxResults($pageSize) 
+                        ->getQuery()
+                        ->getResult()
+                    ;
+                }
+            else 
+                {
+                    return $qb
+                            ->AndWhere('user.email LIKE :email')
+                            ->setParameter('email', '%'.$email.'%')
+                            ->orderBy('user.id','DESC')
+                            ->setFirstResult($pageSize * ($page-1))
+                            ->setMaxResults($pageSize) 
+                            ->getQuery()
+                            ->getResult()
+                    ;
+
+                }
+            
    }
+
+
+   /* public function searchByEmail($email) {
+    return $this->createQueryBuilder('user')
+        ->andWhere('user.email LIKE :email')
+        ->setParameter('email', '%'.$email.'%')
+        ->orderBy('user.id', 'DESC')
+        ->getQuery()
+        ->getResult();
+   } */
 
   /* public function findByOrganization($organization): array
    {
@@ -95,6 +132,8 @@ class CoreUserRepository extends ServiceEntityRepository
            ->getResult()
   ;
   }
+
+
 
 //    /**
 //     * @return CoreUser[] Returns an array of CoreUser objects
@@ -120,4 +159,6 @@ class CoreUserRepository extends ServiceEntityRepository
 //            ->getOneOrNullResult()
 //        ;
 //    }
+
+
 }

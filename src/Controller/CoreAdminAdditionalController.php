@@ -66,7 +66,7 @@ class CoreAdminAdditionalController extends AbstractController
                     {
                         return $this->json (
                             $admin->addAdmin($request,$validator,$userPasswordHasher,$idOrganization,$idCountry,$idRole) ,
-                            201 ,
+                            Response::HTTP_CREATED ,
                             [] ,
                             [
                                 ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER => 
@@ -113,7 +113,6 @@ class CoreAdminAdditionalController extends AbstractController
             'type_user' => $user->getType() ,
             'status_user' => $user->isEnabled() ,
             'delegate_user' => $user->isHasDelegate() ,
-            //'token_expiration_date' => $token->getTokenExpirationDate() ,
             'role_user' => $user->getCoreUserRoles()
         ]);
         
@@ -121,37 +120,14 @@ class CoreAdminAdditionalController extends AbstractController
         $em->flush();
         $em->getConnection()->commit();
         //dd($access);
-        return new JsonResponse($access);
+        return new JsonResponse($access ,
+        Response::HTTP_CREATED
+        );
 
         } catch(Exception $e){
             $em->getConnection()->rollback();
             throw $e;
         }
     }
-     //fonction de test 
-    /* #[Route('/api/verifyRole',name: 'app_verify_role',methods: ['GET'])]
-    public function verifyRole()
-    {
-        if($this->getUser())
-        {
-            $auth_checker = $this->container->get('security.authorization_checker');
-            /* if($this->container->get('security.authorization_checker')->isGranted('ROLE_ADMIN'))
-            {
-               
-                /* $token = $this->container->get('security.token_storage')->getToken();
-                $user = $token->getUser(); // recuperer un utilisateur d'apres le token passe 
-                return $this->json($user); 
-                return $this->json('true role');
-            }
-            else 
-                return $this->json('false role'); 
-                $isRoleAdmin = $auth_checker->isGranted('ROLE_USER');
-                return $this->json($isRoleAdmin);
-            
-                
-        }
-        else 
-            return $this->json('not connected ! ');
-        
-    } */ 
+  
 }

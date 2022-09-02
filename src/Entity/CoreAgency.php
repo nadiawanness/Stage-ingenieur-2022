@@ -19,6 +19,7 @@ class CoreAgency
     private ?int $internalCode = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups('coreagency:read')]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
