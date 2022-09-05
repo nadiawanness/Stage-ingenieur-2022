@@ -14,6 +14,7 @@ use App\Entity\AccessToken;
 use App\Repository\CoreUserRepository;
 use App\Repository\AccessTokenRepository;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+//use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -37,95 +38,94 @@ class SecurityController extends AbstractController
         ['last_username' => $lastUsername, 'error' => $error]); 
     }
 
-    #[Route(path: '/login/token/{idUser}', name: 'api_login_token' ,methods: ['POST'])]
+    #[Route(path: '/login/token', name: 'api_login_token' ,methods: ['POST'])]
     public function loginTokenDetails(
         CoreUserRepository $userRepo ,
         AccessTokenRepository $accessRepo ,
-        Request $request , 
-        $idUser , 
-        //SerializerInterface $serializer ,
+        Request $request ,
         JWTTokenManagerInterface $JWTManager ,
         EntityManagerInterface $em 
     )
     {
-        $user = $userRepo->find($idUser);
-        
-        /* $jsonRecu = $request->getContent();
-        if (!empty($jsonRecu))
-            {
-                $params = json_decode($jsonRecu, true); // 2nd param to get as array
-                
-                //dd($params->get('email')); // tu devrais voir apparaître ici le JSON sous forme de tableau associatif PHP
-                //var_dump($params); // tu devrais voir apparaître ici le JSON sous forme de tableau associatif PHP
-            } 
-        //dd($jsonRecu); 
-        $user = $serializer->deserialize($jsonRecu, CoreUser::class,'json'); */
-
-        if($user instanceof CoreUser)
+        $data = json_decode($request->getContent());
+        $user = $userRepo->findUserByEmail($data->email);
+        if(isset($user))
             {   
-                $token = $JWTManager->create($user);
-                $access = $accessRepo->findByUser($user->getId());
-                $idUserAccess = 0 ;
-                foreach($access as $access)
+                foreach($user as $user)
                     {
-                        $idUserAccess = $access->getCoreUser()->getId();
+                        $userPassword = $user->getPassword();
                     }
-                if($idUserAccess == $user->getId())
+                
+                if(password_verify($data->password, $userPassword))
                     {
-                        $em->getConnection()->beginTransaction();
-                        try{
-                            $access->setSingleUseToken($token);
-                            $em->flush();
-                            $em->getConnection()->commit();
-                            return new JsonResponse([
-                                'notice' => 'new token for an old user' ,
-                                'token' => $token ,
-                                'userEmail' => $user->getEmail() ,
-                                'userType' => $user->getType()
-                            ]);
+                        $token = $JWTManager->create($user);
+                        $access = $accessRepo->findByUser($user->getId());
+                        $idUserAccess = 0 ;
+                        foreach($access as $access)
+                            {
+                                $idUserAccess = $access->getCoreUser()->getId();
+                            }
+                        if($idUserAccess == $user->getId())
+                            {
+                                $em->getConnection()->beginTransaction();
+                                try{
+                                    $access->setSingleUseToken($token);
+                                    $em->flush();
+                                    $em->getConnection()->commit();
+                                    return new JsonResponse([
+                                        'notice' => 'new token for an old user' ,
+                                        'token' => $token ,
+                                        'userEmail' => $user->getEmail() ,
+                                        'userType' => $user->getType() ,
+                                        'token ttl' => time() + 3600
+                                    ]);
 
-                        } catch(Exception $e){
-                            $em->getConnection()->rollback();
-                            throw $e;
-                        }
+                                } catch(Exception $e){
+                                    $em->getConnection()->rollback();
+                                    throw $e;
+                                }
+                            }
+                        else 
+                            {
+                                $em->getConnection()->beginTransaction();
+                                try{
+                                    $accessNew = new AccessToken();
+                                    $accessNew->setSingleUseToken($token);
+                                    $accessNew->setPunchout(false);
+                                    $accessNew->setAttributes([
+                                        'id' => $user->getId() ,
+                                        'username' => $user->getUsername() ,
+                                        'email' => $user->getEmail() ,
+                                        'type' => $user->getType() ,
+                                        'status' => $user->isEnabled() ,
+                                        'delegate' => $user->isHasDelegate() ,
+                                        'role' => $user->getCoreUserRoles()
+                                    ]);
+                                    $accessNew->setCoreUser($user);
+                                    $em->persist($accessNew);
+                                    $em->flush();
+                                    $em->getConnection()->commit();
+                                    return new JsonResponse([
+                                        'notice' => 'new token for a new user' ,
+                                        'token' => $token ,
+                                        'userEmail' => $user->getEmail() ,
+                                        'userType' => $user->getType() ,
+                                        'token ttl' => time() + 3600
+                                        ]);
+            
+                                } catch(Exception $e){
+                                    $em->getConnection()->rollback();
+                                    throw $e;
+                                }
+
+                            }
+
                     }
                 else 
-                    {
-                        $em->getConnection()->beginTransaction();
-                        try{
-                            $accessNew = new AccessToken();
-                            $accessNew->setSingleUseToken($token);
-                            $accessNew->setPunchout(false);
-                            $accessNew->setAttributes([
-                                'id' => $user->getId() ,
-                                'username' => $user->getUsername() ,
-                                'email' => $user->getEmail() ,
-                                'type' => $user->getType() ,
-                                'status' => $user->isEnabled() ,
-                                'delegate' => $user->isHasDelegate() ,
-                                'role' => $user->getCoreUserRoles()
-                            ]);
-                            $accessNew->setCoreUser($user);
-                            $em->persist($accessNew);
-                            $em->flush();
-                            $em->getConnection()->commit();
-                            return new JsonResponse([
-                                'notice' => 'new token for a new user' ,
-                                'token' => $token ,
-                                'userEmail' => $user->getEmail() ,
-                                'userType' => $user->getType()
-                            ]);
-    
-                        } catch(Exception $e){
-                            $em->getConnection()->rollback();
-                            throw $e;
-                        }
-
-                    }
-  
+                    return new JsonResponse(['message' => 'invalid password . try again'], Response::HTTP_BAD_REQUEST); 
             }
         else 
-            return new JsonResponse(['message' => 'invalid credentials . try again'], Response::HTTP_INTERNAL_SERVER_ERROR); 
+            return new JsonResponse(['message' => 'invalid credentials . try again'], Response::HTTP_BAD_REQUEST); 
     }
 
 

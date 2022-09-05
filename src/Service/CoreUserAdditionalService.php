@@ -60,6 +60,30 @@ class CoreUserAdditionalService
         
     }
 
+    public function getSimpleUserByType(Request $request,$offset,$limit){
+
+        $listUser = $this->userRepo->findUserByType('core_user_additional',$offset,$limit);
+        //dd($listUser);
+
+        /* $pagination = $this->paginator->paginate(
+            $admin, // query NOT result 
+            $request->query->getInt('page', 1) // page number,
+            3 // limit per page
+        ); */
+
+        $p = $this->serializer->serialize($listUser, 'json',
+            [ 
+                'groups' =>
+                    'coreuser:read' ,
+                    'corecountry:read' , 
+                    'coreorganization:read' , 
+                    'corerole:read'
+            ]
+    );
+        return $p;
+        
+    }
+
     /* public function searchSimpleUser(Request $request ,
     $emailUser
     ){
@@ -100,9 +124,9 @@ class CoreUserAdditionalService
     public function searchSimpleUser(Request $request , 
     CoreUser $admin
     ){
-        $donnees = json_decode($request->getContent());
-        //dd($donnees);
-        $user = $this->userRepo->findByOrg($admin,$donnees->email,true);
+        $data = json_decode($request->getContent());
+        //dd($data);
+        $user = $this->userRepo->findByOrg($admin,true,$data->email);
         dd($user);
             foreach($user as $user)
                 {
@@ -136,7 +160,7 @@ class CoreUserAdditionalService
 
     public function getByOrganization($admin)
     {
-        $user = $this->userRepo->findByOrg($admin,null,false);
+        $user = $this->userRepo->findByOrg($admin);
         //dd($user);
         $p = $this->serializer->serialize($user , 'json',[ 
             'groups' =>
@@ -237,7 +261,6 @@ class CoreUserAdditionalService
         
         
         $role = $this->roleRepo->find($idRole);
-        dd($role);
         if($role instanceof CoreRole) //step1 : verify the existance of the role
             {
                 if($role->isEnabled()) //verify if the agency is enabled or not
@@ -348,7 +371,7 @@ class CoreUserAdditionalService
     $idErp 
     )
     {
-       $user->setUsername($username);
+        $user->setUsername($username);
         $user->setUsernameCanonical($usernameCanonical);
         $user->setEmail($email);
         $user->setEmailCanonical($emailCanonical);
@@ -375,17 +398,12 @@ class CoreUserAdditionalService
             $user->setCivility($civility) ,
             $user->setIdErp($idErp) 
         ]; */
+
     }
 
     public function getSimpleUserById($idUser)
     {
         $user = $this->userRepo->find($idUser);
-        /* $list = $user->getCoreUserRoles();
-        foreach ($list as $list)
-        {
-            dd($list->getCoreRole()->getName());
-        } */
-        //dd($user->getCoreUserRoles()->getId());
         $this->em->getConnection()->beginTransaction();
         try{
             if($user instanceof CoreUser)
@@ -412,7 +430,6 @@ class CoreUserAdditionalService
 
         $user = $this->userRepo->find($idUser);
         $donnees = json_decode($request->getContent());
-        //dd($donnees->enabled == false);
         $this->em->getConnection()->beginTransaction();
         try{
 
@@ -454,7 +471,7 @@ class CoreUserAdditionalService
                         return new JsonResponse(['message' => 'this user should be a core_user_additional type .'], Response::HTTP_INTERNAL_SERVER_ERROR);
                 }
             else 
-                return new JsonResponse(['message' => 'this user does not exist .'], Response::HTTP_INTERNAL_SERVER_ERROR);
+                return new JsonResponse(['message' => 'this user does not exist .'], Response::HTTP_BAD_REQUEST);
 
         } catch(Exception $e){
             $em->getConnection()->rollback();

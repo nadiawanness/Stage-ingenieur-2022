@@ -74,6 +74,57 @@ class CoreUserAdditionalController extends AbstractController
          
         } 
 
+
+    #[Route('/api/getSimpleUserByType/page/{offset}/of/{limit}',name: 'app_get_simple_user_by_type',methods: ['GET'])]
+    //#[IsGranted('ROLE_ADMIN',message: 'Sorry you are not allowed to see the  simple users list ! You need to get the admin role .')]
+    public function getSimpleUsersByType(
+        CoreUserAdditionalService $simpleUser ,
+        Request $request ,
+        $offset ,
+        $limit
+        ): Response
+            {       $role = $this->getUser()->getCoreUserRoles();
+                    foreach ($role as $role)
+                        {
+                            $roleAdmin = $role->getCoreRole()->getName();
+                        }
+    
+                    if($roleAdmin == 'ROLE_ADMIN')
+                        {
+                            return new Response (
+                                //$simpleUser->getSimpleUser($request) ,
+                                $simpleUser->getSimpleUserByType($request,$offset,$limit) ,
+                                Response::HTTP_OK ,
+                                [] ,
+                                [
+                                    ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER => 
+                                    function($organisation){
+                                        return 
+                                        //$role->addUser($role->getUsers());
+                                        //$role->getUsers();
+                                        //$user->getEmail();
+                                        //$organisation->getCompanyName();
+                                        'nadia' ;
+                                        //$role->getNom();
+                                    }
+                                ]
+                            );
+                        }
+                    else 
+                         return $this->json([
+                            "code" => "400",
+                            "messsage" => "Role admin is required ! " ,
+                            
+                       ]
+                        ); 
+
+                        //return new JsonResponse('role admin is needed');
+                    
+                
+         
+        } 
+
+
     #[Route('/api/searchSimpleUser',name: 'app_search_simple_user',methods: ['GET'])]
     //#[IsGranted('ROLE_ADMIN',message: 'Sorry you are not allowed to see the  simple users list ! You need to get the admin role .')]
     public function searchSimpleUsers(

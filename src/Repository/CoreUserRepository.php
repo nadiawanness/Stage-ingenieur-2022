@@ -18,7 +18,7 @@ class CoreUserRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, CoreUser::class);
+        parent::__construct($registry,CoreUser::class);
     }
 
     public function add(CoreUser $entity, bool $flush = false): void
@@ -51,11 +51,51 @@ class CoreUserRepository extends ServiceEntityRepository
    ;
    }
 
-   public function findByOrg($admin ,$email,$search): array
+
+  public function findUserByEmail($email)
+    {
+      return $this->createQueryBuilder('user')
+          ->select('user')
+          ->andWhere('user.email = :email')
+          ->setParameter('email', $email)
+          ->orderBy('user.id', 'DESC')
+          ->getQuery()
+          ->getResult()
+ ;
+ }
+
+    public function findByEmailPassword($email,$password) {
+    return $this->createQueryBuilder('user')
+        ->andWhere('user.email = :email')
+        ->andWhere('user.password = :password')
+        ->setParameters([
+            'email' => $email,
+            'password' => $password,
+        ])
+        ->orderBy('user.id', 'DESC')
+        ->getQuery()
+        ->getResult();
+
+   }
+
+   public function findUserByType($type,$offset = null, $limit = null): array
+   {
+       return $this->createQueryBuilder('user')
+           ->select('user')
+           ->andWhere('user.type = :val')
+           ->setParameter('val', $type)
+           ->orderBy('user.id', 'DESC')
+           ->setMaxResults($limit) 
+           ->setFirstResult($offset)
+           ->getQuery()
+           ->getResult()
+  ;
+  }
+
+   public function findByOrg($admin,$isSearch = false,$content = null): array
    {
     $page = 1 ;
     $pageSize = 100 ;
-    $search = false ;
 
         $qb = $this->createQueryBuilder('user')
         ->select('user')
@@ -74,30 +114,24 @@ class CoreUserRepository extends ServiceEntityRepository
         ->getQuery()
         ->getResult() */
         ; 
-            
-            if($search)
+            if($isSearch)
                 {
-                    return $qb 
-                        ->orderBy('user.id','DESC')
-                        ->setFirstResult($pageSize * ($page-1))
-                        ->setMaxResults($pageSize) 
-                        ->getQuery()
-                        ->getResult()
-                    ;
+                    //$this->filtre($content);
+                    $qb
+                        ->andWhere('user.email LIKE :email')
+                        //->andWhere('user.username LIKE :username')
+                        ->setParameter('email', '%'.$content.'%')
+                        //->setParameter('username', '%'.$content.'%')
+                        ;
                 }
-            else 
-                {
-                    return $qb
-                            ->AndWhere('user.email LIKE :email')
-                            ->setParameter('email', '%'.$email.'%')
-                            ->orderBy('user.id','DESC')
-                            ->setFirstResult($pageSize * ($page-1))
-                            ->setMaxResults($pageSize) 
-                            ->getQuery()
-                            ->getResult()
-                    ;
-
-                }
+                
+        return $qb 
+            ->orderBy('user.id','DESC')
+            ->setFirstResult($pageSize * ($page-1))
+            ->setMaxResults($pageSize)
+            ->getQuery()
+            ->getResult()
+            ;
             
    }
 
