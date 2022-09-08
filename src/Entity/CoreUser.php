@@ -10,17 +10,23 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: CoreUserRepository::class)]
 #[UniqueEntity(fields: ['email'], message: 'There is already an account with this email')]
-class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
+class CoreUser implements UserInterface, PasswordAuthenticatedUserInterface
 {
+    public const TYPE_ADMIN_ADDITIONAL = 'core_admin_additional';
+    public const TYPE_USER_ADDITIONAL = 'core_user_additional';
+    public const CIVILITY_MR = 'mr';
+    public const CIVILITY_MS = 'ms';
+    public const CIVILITY_MRS = 'mrs';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups( [ 'coreuser:read'] )]
+    #[Groups(['coreuser:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
@@ -34,7 +40,7 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: 'Email is required !')]
-    #[Groups([ 'coreuser:read' ])]
+    #[Groups(['coreuser:read'])]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
@@ -42,12 +48,12 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
     private ?string $emailCanonical = null;
 
     #[ORM\Column(length: 255)]
-    //#[Assert\NotBlank(message: 'Password is required !')]
-    //#[Assert\Length(min: 6)]
+    // #[Assert\NotBlank(message: 'Password is required !')]
+    // #[Assert\Length(min: 6)]
     #[Groups('coreuser:read')]
     private ?string $password = null;
 
-    #[ORM\Column(length: 255,nullable: true)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Groups('coreuser:read')]
     private ?string $salt = null;
 
@@ -63,9 +69,8 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
     #[Groups('coreuser:read')]
     private ?\DateTimeImmutable $passwordRequestedAt = null;
 
-    #[ORM\Column(type:'json')]
-    #[Groups([ 'coreuser:read' ])]
-    private  $roles = []; 
+    #[ORM\Column(type: 'json')]
+    private $roles = [];
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Groups('coreuser:read')]
@@ -74,7 +79,7 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     #[Groups('coreuser:read')]
     private ?string $firstName = null;
-    
+
     #[ORM\Column(length: 255, nullable: true)]
     #[Groups('coreuser:read')]
     private ?string $lastName = null;
@@ -88,8 +93,8 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
     private ?string $phone = null;
 
     #[ORM\Column(length: 255)]
-    //#[Assert\Choice(callback: 'getCivilities')]
-    #[Assert\Choice(["Mr", "Mrs", "Ms"])]
+    // #[Assert\Choice(callback: 'getCivilities')]
+    // #[Assert\Choice([CIVILITY_MR,CIVILITY_MRS,CIVILITY_MS])]
     #[Assert\NotBlank(message: 'Civility is required !')]
     #[Groups('coreuser:read')]
     private ?string $civility = null;
@@ -102,7 +107,7 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
     #[Groups('coreuser:read')]
     private ?string $idErp = null;
 
-    #[ORM\Column(length: 255,nullable: true)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Groups('coreuser:read')]
     private ?string $confirmPassword = null;
 
@@ -125,7 +130,7 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
     #[ORM\ManyToMany(targetEntity: CoreOrganization::class)]
     #[ORM\JoinTable(name: 'core_user_organization')]
     #[ORM\JoinColumn(name: 'core_user_additional_id', referencedColumnName: 'id')]
-    #[Groups([ 'coreuser:read' ])]
+    #[Groups(['coreuser:read'])]
     private Collection $organizations;
 
     #[ORM\OneToMany(mappedBy: 'coreUser', targetEntity: CoreUserAgencies::class, orphanRemoval: true)]
@@ -133,11 +138,11 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
     private Collection $coreUserAgencies;
 
     #[ORM\OneToMany(mappedBy: 'assignedTo', targetEntity: CoreOrganization::class)]
-    //#[Groups('coreuser:read')]
+    // #[Groups('coreuser:read')]
     private Collection $coreOrganizations;
-    
+
     #[Groups('coreuser:read')]
-    #[ORM\OneToMany(mappedBy: 'coreUser', targetEntity: CoreCountry::class, orphanRemoval: true , cascade: ['persist'])]
+    #[ORM\OneToMany(mappedBy: 'coreUser', targetEntity: CoreCountry::class, orphanRemoval: true, cascade: ['persist'])]
     private Collection $coreCountries;
 
     #[ORM\OneToMany(mappedBy: 'coreUser', targetEntity: CoreUserRole::class, orphanRemoval: true)]
@@ -150,7 +155,6 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
     /* #[ORM\OneToMany(mappedBy: 'creatorId', targetEntity: CoreAgency::class, orphanRemoval: true)]
     private Collection $agencies; */
 
-
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -160,20 +164,18 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
         $this->agencies = new ArrayCollection();
         $this->coreOrganizations = new ArrayCollection();
         $this->coreCountries = new ArrayCollection();
-        $this->enabled = true ;
-        $this->hasDelegate = false ;
+        $this->enabled = true;
+        $this->hasDelegate = false;
         $this->locale = 'en';
         $this->coreUserRoles = new ArrayCollection();
         $this->accessTokens = new ArrayCollection();
-        
     }
-    
+
     public function getId(): ?int
     {
         return $this->id;
     }
 
-   
     public function getUsername(): ?string
     {
         return $this->username;
@@ -283,21 +285,20 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
     }
 
      public function getRoles(): array
-    {
-        $roles = $this->roles;
-        // guarantee every user at least has ROLE_USER
-        // $roles[] = 'ROLE_USER';
+     {
+         $roles = $this->roles;
+         // guarantee every user at least has ROLE_USER
+         // $roles[] = 'ROLE_USER';
 
-        return array_unique($roles); 
-    }
-
+         return array_unique($roles);
+     }
 
     public function setRoles(array $roles): self
     {
         $this->roles = $roles;
 
         return $this;
-    } 
+    }
 
     public function getLocale(): ?string
     {
@@ -413,7 +414,7 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
         // $this->plainPassword = null;
     }
 
-     /**
+    /**
      * A visual identifier that represents this user.
      *
      * @see UserInterface
@@ -493,15 +494,15 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
         $this->organizations->removeElement($organization);
 
         return $this;
-    } 
-
-    /**
-     * @return Collection<int, CoreUserAgencies>
-     */
-     public function getCoreUserAgencies(): Collection
-    {
-        return $this->coreUserAgencies;
     }
+
+     /**
+      * @return Collection<int, CoreUserAgencies>
+      */
+     public function getCoreUserAgencies(): Collection
+     {
+         return $this->coreUserAgencies;
+     }
 
     public function addCoreUserAgency(CoreUserAgencies $coreUserAgency): self
     {
@@ -674,6 +675,4 @@ class CoreUser implements UserInterface,PasswordAuthenticatedUserInterface
 
         return $this;
     }
-
-  
 }

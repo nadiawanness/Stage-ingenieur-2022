@@ -3,7 +3,6 @@
 namespace App\Entity;
 
 use App\Repository\AccessTokenRepository;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: AccessTokenRepository::class)]
@@ -14,7 +13,7 @@ class AccessToken
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column( nullable: true)]
+    #[ORM\Column(nullable: true)]
     private array $attributes = [];
 
     #[ORM\Column(length: 2000, nullable: true)]
@@ -27,10 +26,10 @@ class AccessToken
     #[ORM\JoinColumn(nullable: false)]
     private ?CoreUser $coreUser = null;
 
-    function __construct()
+    public function __construct()
     {
-        $this->punchout = false ;
-        $this->attributes = array() ;
+        $this->punchout = false;
+        $this->attributes = [];
     }
 
     public function getId(): ?int

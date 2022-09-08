@@ -41,15 +41,15 @@ class AccessTokenRepository extends ServiceEntityRepository
 
     public function findByUser($idUser): array
     {
-       return $this->createQueryBuilder('accessToken')
-           ->select('accessToken')
-           ->andWhere('accessToken.coreUser = :val')
-           ->setParameter('val', $idUser)
-           ->orderBy('accessToken.id', 'DESC')
-           ->getQuery()
-           ->getResult()
-      ;
-   }
+        return $this->createQueryBuilder('accessToken')
+            ->select('accessToken')
+            ->andWhere('accessToken.coreUser = :val')
+            ->setParameter('val', $idUser)
+            ->orderBy('accessToken.id', 'DESC')
+            ->getQuery()
+            ->getResult()
+        ;
+    }
 
 //    /**
 //     * @return AccessToken[] Returns an array of AccessToken objects

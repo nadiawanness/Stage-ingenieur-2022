@@ -17,7 +17,7 @@ class CoreRole
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups([ 'coreuser:read' , 'corerole:read' ])]
+    #[Groups(['coreuser:read', 'corerole:read'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -37,11 +37,11 @@ class CoreRole
 
     #[ORM\OneToMany(mappedBy: 'coreRole', targetEntity: CoreUserRole::class, orphanRemoval: true)]
     private Collection $coreUserRoles;
-    
-    function __construct()
+
+    public function __construct()
     {
-        $this->isDefault = true ;
-        $this->enabled = true ;
+        $this->isDefault = true;
+        $this->enabled = true;
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = new \DateTimeImmutabe();
         $this->coreUserRoles = new ArrayCollection();

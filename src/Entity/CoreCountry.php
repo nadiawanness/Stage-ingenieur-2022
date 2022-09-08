@@ -3,7 +3,6 @@
 namespace App\Entity;
 
 use App\Repository\CoreCountryRepository;
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
@@ -16,7 +15,7 @@ class CoreCountry
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups([ 'coreuser:read' , 'corecountry:read' ])]
+    #[Groups(['coreuser:read', 'corecountry:read'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -70,8 +69,8 @@ class CoreCountry
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $timezones = null;
 
-    #[ORM\Column( nullable: true)]
-    private array $borders = []; 
+    #[ORM\Column(nullable: true)]
+    private array $borders = [];
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $nativeName = null;
@@ -79,17 +78,17 @@ class CoreCountry
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $currency = null;
 
-    #[ORM\Column( nullable: true)]
+    #[ORM\Column(nullable: true)]
     private array $languages = [];
 
-    #[ORM\Column( nullable: true)]
-    private array $translations = []; 
+    #[ORM\Column(nullable: true)]
+    private array $translations = [];
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $flag = null;
 
     #[ORM\Column]
-    private array $regionalBlocs = []; 
+    private array $regionalBlocs = [];
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $cioc = null;
@@ -106,17 +105,16 @@ class CoreCountry
     #[ORM\ManyToOne(inversedBy: 'coreCountries', cascade: ['persist'])]
     #[ORM\JoinColumn(name: 'core_user_id', referencedColumnName: 'id')]
     private ?CoreUser $coreUser = null;
-    
-    function __construct()
+
+    public function __construct()
     {
-        $this->enabled = true ;
-        $this->createdAt = new \DateTimeImmutable() ;
-        $this->updatedAt = new \DateTimeImmutable() ;
-        $this->languages = array() ;
-        $this->translations = array() ;
-        $this->regionalBlocs = array() ;
+        $this->enabled = true;
+        $this->createdAt = new \DateTimeImmutable();
+        $this->updatedAt = new \DateTimeImmutable();
+        $this->languages = [];
+        $this->translations = [];
+        $this->regionalBlocs = [];
     }
-   
 
     public function getId(): ?int
     {
@@ -342,7 +340,6 @@ class CoreCountry
     public function getBorders(): array
     {
         return $this->borders;
-       
     }
 
     public function setBorders(?array $borders): self
@@ -350,7 +347,7 @@ class CoreCountry
         $this->borders = $borders;
 
         return $this;
-    }  
+    }
 
     public function getNativeName(): ?string
     {
@@ -391,7 +388,6 @@ class CoreCountry
     public function getTranslations(): array
     {
         return $this->translations;
-       
     }
 
     public function setTranslations(?array $translations): self
@@ -399,7 +395,7 @@ class CoreCountry
         $this->translations = $translations;
 
         return $this;
-    } 
+    }
 
     public function getFlag(): ?string
     {
@@ -416,7 +412,6 @@ class CoreCountry
     public function getRegionalBlocs(): array
     {
         return $this->regionalBlocs;
-        
     }
 
     public function setRegionalBlocs(array $regionalBlocs): self
@@ -424,7 +419,7 @@ class CoreCountry
         $this->regionalBlocs = $regionalBlocs;
 
         return $this;
-    } 
+    }
 
     public function getCioc(): ?string
     {
@@ -485,5 +480,4 @@ class CoreCountry
 
         return $this;
     }
-
 }

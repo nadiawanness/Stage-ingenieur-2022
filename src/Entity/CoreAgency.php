@@ -263,7 +263,7 @@ class CoreAgency
         return $this;
     }
 
-      /**
+    /**
      * @return Collection<int, CoreUserAgencies>
      */
     public function getCoreUserAgencies(): Collection
@@ -316,5 +316,4 @@ class CoreAgency
 
         return $this;
     } */
-
 }
