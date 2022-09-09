@@ -9,19 +9,19 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class CoreUserAdditionalController extends AbstractController
 {
-    #[Route('/core/user/additional', name: 'app_core_user_additional')]
-    public function index(): Response
-    {
-        return $this->render('core_user_additional/index.html.twig', [
-            'controller_name' => 'CoreUserAdditionalController',
-        ]);
-    }
-
+    /**
+     * getSimpleUsers
+     * get list of simple users.
+     *
+     * @param mixed $simpleUser
+     * @param mixed $request
+     *
+     * @return void
+     */
     #[Route('/api/getSimpleUser', name: 'app_get_simple_user', methods: ['GET'])]
     public function getSimpleUsers(CoreUserAdditionalService $simpleUser, Request $request)
     {
@@ -29,85 +29,8 @@ class CoreUserAdditionalController extends AbstractController
         foreach ($role as $role) {
             $roleAdmin = $role->getCoreRole()->getName();
         }
-
         if ('ROLE_ADMIN' == $roleAdmin) {
-            return new Response(
-                $simpleUser->getByOrganization(),
-                Response::HTTP_OK,
-                [],
-                [
-                    ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($organisation) {
-                        return 'nadia';
-                    },
-                ]
-            );
-        } else {
-            return $this->json(
-                [
-               'code' => '400',
-               'messsage' => 'Role admin is required ! ',
-                       ]
-            );
-        }
-    }
-
-    #[Route('/api/getSimpleUserByType', name: 'app_get_simple_user_by_type', methods: ['GET'])]
-    public function getSimpleUsersByType(
-        CoreUserAdditionalService $simpleUser,
-        Request $request,
-        /* $offset ,
-        $limit */
-    ): Response {
-        $role = $this->getUser()->getCoreUserRoles();
-        foreach ($role as $role) {
-            $roleAdmin = $role->getCoreRole()->getName();
-        }
-
-        if ('ROLE_ADMIN' == $roleAdmin) {
-            return new Response(
-                $simpleUser->getSimpleUserByType($this->getUser(), $request /* ,$offset,$limit */),
-                Response::HTTP_OK,
-                [],
-                [
-                    ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($organisation) {
-                        return 'nadia';
-                    },
-                ]
-            );
-        } else {
-            return $this->json(
-                [
-               'code' => '400',
-               'messsage' => 'Role admin is required ! ',
-                       ]
-            );
-        }
-    }
-
-    #[Route('/api/searchSimpleUser', name: 'app_search_simple_user', methods: ['GET'])]
-    public function searchSimpleUsers(
-        CoreUserAdditionalService $simpleUser,
-        Request $request
-    ): Response {
-        $role = $this->getUser()->getCoreUserRoles();
-        foreach ($role as $role) {
-            $roleAdmin = $role->getCoreRole()->getName();
-        }
-
-        if ('ROLE_ADMIN' == $roleAdmin) {
-            return $simpleUser->searchSimpleUser($this->getUser(), $request);
-            /* return new Response (
-                $simpleUser->searchSimpleUser($this->getUser(),$request) ,
-                Response::HTTP_OK ,
-                [] ,
-                [
-                    ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER =>
-                    function($organisation){
-                        return
-                        'nadia' ;
-                    }
-                ]
-            ); */
+            return $simpleUser->getSimpleUser($request, $this->getUser());
         } else {
             return new JsonResponse(
                 ['message' => 'role admin is required . try again'],
@@ -116,6 +39,43 @@ class CoreUserAdditionalController extends AbstractController
         }
     }
 
+    /**
+     * searchSimpleUsers
+     * search users.
+     *
+     * @param mixed $simpleUser
+     * @param mixed $request
+     *
+     * @return void
+     */
+    #[Route('/api/searchSimpleUser', name: 'app_search_simple_user', methods: ['GET'])]
+    public function searchSimpleUsers(CoreUserAdditionalService $simpleUser, Request $request)
+    {
+        $role = $this->getUser()->getCoreUserRoles();
+        foreach ($role as $role) {
+            $roleAdmin = $role->getCoreRole()->getName();
+        }
+        if ('ROLE_ADMIN' == $roleAdmin) {
+            return $simpleUser->searchSimpleUser($this->getUser(), $request);
+        } else {
+            return new JsonResponse(
+                ['message' => 'role admin is required . try again'],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+    }
+
+    /**
+     * postSimpleUser
+     * add a new simple user.
+     *
+     * @param mixed $simpleUser
+     * @param mixed $request
+     * @param mixed $validator
+     * @param mixed $userPasswordHasher
+     *
+     * @return void
+     */
     #[Route('/api/postSimpleUser', name: 'app_post_simple_user', methods: ['POST'])]
     public function postSimpleUser(CoreUserAdditionalService $simpleUser, Request $request, ValidatorInterface $validator, UserPasswordHasherInterface $userPasswordHasher)
     {
@@ -133,6 +93,16 @@ class CoreUserAdditionalController extends AbstractController
         }
     }
 
+    /**
+     * putSimpleUser
+     * modify an existing simple user.
+     *
+     * @param mixed $simpleUser
+     * @param mixed $request
+     * @param mixed $idUser
+     *
+     * @return void
+     */
     #[Route('/api/putSimpleUser/{idUser}', name: 'app_put_simple_user', methods: ['PUT'])]
     public function putSimpleUser(
         CoreUserAdditionalService $simpleUser,
@@ -145,15 +115,7 @@ class CoreUserAdditionalController extends AbstractController
         }
 
         if ('ROLE_ADMIN' == $roleAdmin) {
-            return $this->json(
-                $simpleUser->editSimpleUser($request, $idUser),
-                Response::HTTP_OK,
-                [],
-                [
-                    ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($organisation) {
-                    },
-                ]
-            );
+            return $simpleUser->editSimpleUser($request, $idUser);
         } else {
             return new JsonResponse(
                 ['message' => 'role admin is required . try again'],
@@ -162,6 +124,16 @@ class CoreUserAdditionalController extends AbstractController
         }
     }
 
+    /**
+     * changeStatusSimpleUser
+     * enable or disable an existing simple user.
+     *
+     * @param mixed $simpleUser
+     * @param mixed $request
+     * @param mixed $idUser
+     *
+     * @return void
+     */
     #[Route('/api/changeStatusUser/{idUser}', name: 'app_change_status_simple_user', methods: ['PATCH'])]
     public function changeStatusSimpleUser(
         CoreUserAdditionalService $simpleUser,
@@ -174,16 +146,7 @@ class CoreUserAdditionalController extends AbstractController
         }
 
         if ('ROLE_ADMIN' == $roleAdmin) {
-            return $this->json(
-                $simpleUser->changeStatusUser($idUser, $request),
-                Response::HTTP_OK,
-                [],
-                [
-                    ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($organisation) {
-                        return 'nadia';
-                    },
-                ]
-            );
+            return $simpleUser->changeStatusUser($idUser, $request);
         } else {
             return new JsonResponse(
                 ['message' => 'role admin is required . try again'],
@@ -198,44 +161,15 @@ class CoreUserAdditionalController extends AbstractController
         $token = $this->container->get('security.token_storage')->getToken();
         $user = $token->getUser();
 
-        return $this->json(
-            $user,
-            Response::HTTP_OK,
-            [],
+        return new JsonResponse(
             [
-                ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($organisation) {
-                    return 'nadia';
-                },
-            ]
+            'id' => $user->getId(),
+            'username' => $user->getUsername(),
+            'email' => $user->getEmail(),
+            'type' => $user->getType(),
+            'civility' => $user->getCivility(),
+            ],
+            Response::HTTP_OK
         );
-    }
-
-    #[Route('/api/getUserById/{idUser}', name: 'app_user_by_id', methods: ['GET'])]
-    public function getUserById(
-        CoreUserAdditionalService $simpleUser,
-        $idUser
-    ) {
-        $role = $this->getUser()->getCoreUserRoles();
-        foreach ($role as $role) {
-            $roleAdmin = $role->getCoreRole()->getName();
-        }
-
-        if ('ROLE_ADMIN' == $roleAdmin) {
-            return new Response(
-                $simpleUser->getSimpleUserById($idUser),
-                Response::HTTP_OK,
-                [],
-                [
-                    ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($organisation) {
-                        return 'nadia';
-                    },
-                ]
-            );
-        } else {
-            return new JsonResponse(
-                ['message' => 'role admin is required . try again'],
-                Response::HTTP_BAD_REQUEST
-            );
-        }
     }
 }

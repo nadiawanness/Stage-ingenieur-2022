@@ -39,14 +39,6 @@ class CoreUserRepository extends ServiceEntityRepository
         }
     }
 
-    /**
-     * findCoreUserByType
-     * find user by type.
-     *
-     * @param mixed $type
-     *
-     * @return void
-     */
     public function findCoreUserByType($type)
     {
         return $this->createQueryBuilder('user')
@@ -56,6 +48,29 @@ class CoreUserRepository extends ServiceEntityRepository
             ->orderBy('user.id', 'DESC')
             ->getQuery()
             ->getResult();
+    }
+
+    public function findCoreUserByOrg($admin, $isSearch = false, $content = null)
+    {
+        $qb = $this->createQueryBuilder('user')
+            ->select('user')
+            ->leftJoin('user.organizations', 'org')
+            ->andWhere('user.type = :type')
+            ->andWhere('org.assignedTo = :idadmin')
+            ->andWhere('org.status = :status')
+            ->andWhere('org.enabled = :enabled')
+            ->setParameter('type', 'core_user_additional')
+            ->setParameter('idadmin', $admin)
+            ->setParameter('status', 'valid')
+            ->setParameter('enabled', '1');
+        if ($isSearch) {
+            $this->filtreUser($qb, $content);
+        } else {
+            return $qb
+            ->orderBy('user.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+        }
     }
 
     /**
@@ -89,45 +104,8 @@ class CoreUserRepository extends ServiceEntityRepository
     private function filtreUser($query, $content)
     {
         return $query
-            ->andWhere('user.type LIKE :val')
-            ->orWhere('user.username LIKE :username')
-            ->orWhere('user.email LIKE :email')
-            ->setParameter('val', $content['type'])
-            ->setParameter('username', $content['username'])
+            ->andWhere('user.email LIKE :email')
             ->setParameter('email', $content['email']);
-    }
-
-    /**
-     * findByOrg
-     * list user who are assigned to the same organization as the connected admin.
-     *
-     * @param mixed $admin
-     * @param mixed $isSearch
-     * @param mixed $content
-     *
-     * @return void
-     */
-    public function findByOrg($admin, $isSearch = false, $content = null)
-    {
-        $qb = $this->createQueryBuilder('user')
-            ->select('user')
-            ->leftJoin('user.organizations', 'org')
-            ->andWhere('user.type = :type')
-            ->andWhere('org.assignedTo = :idadmin')
-            ->andWhere('org.status = :status')
-            ->andWhere('org.enabled = :enabled')
-            ->setParameter('type', CoreUser::TYPE_USER_ADDITIONAL)
-            ->setParameter('idadmin', $admin)
-            ->setParameter('status', 'valid')
-            ->setParameter('enabled', '1');
-        if ($isSearch) {
-            $this->filtreUser($qb, $content);
-        } else {
-            return $qb
-            ->orderBy('user.id', 'DESC')
-            ->getQuery()
-            ->getResult();
-        }
     }
 
 //    /**

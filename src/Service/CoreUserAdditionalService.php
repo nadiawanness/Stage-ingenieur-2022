@@ -6,6 +6,7 @@ use App\Entity\CoreAgency;
 use App\Entity\CoreCountry;
 use App\Entity\CoreOrganization;
 use App\Entity\CoreRole;
+use App\Entity\CoreUser;
 use App\Entity\CoreUserAgencies;
 use App\Entity\CoreUserRole;
 use App\Repository\CoreAgencyRepository;
@@ -35,16 +36,18 @@ class CoreUserAdditionalService
     }
 
     /**
-     * getSimpleUser.
+     * getSimpleUser
+     * list simple users who are assigned to the same organization as the connected admin.
      *
      * @param mixed $request
+     * @param mixed $admin
      *
      * @return void
      */
-    public function getSimpleUser(Request $request)
+    public function getSimpleUser(Request $request, $admin)
     {
-        $user = $this->userRepo->findCoreUserByType(CoreUser::TYPE_USER_ADDITIONAL);
-        $p = $this->serializer->serialize(
+        $user = $this->userRepo->findCoreUserByOrg($admin);
+        $listUser = $this->serializer->serialize(
             $user,
             'json',
             [
@@ -55,11 +58,12 @@ class CoreUserAdditionalService
             ]
         );
 
-        return $p;
+        return new Response($listUser, Response::HTTP_OK);
     }
 
     /**
      * searchSimpleUser.
+     * search simple users.
      *
      * @param mixed $admin
      * @param mixed $request
@@ -70,57 +74,34 @@ class CoreUserAdditionalService
     {
         $data = json_decode($request->getContent(), true);
         $searchUser = $this->userRepo->findByOrg($admin, true, $data);
-        if (false == empty($searchUser)) {
-            // $listSearched = $this->serializer->serialize(
-            //     $searchUser,
-            //     'json',
-            //     [
-            //         'groups' =>
-            //             'coreuser:read' ,
-            //             'corecountry:read' ,
-            //             'coreorganization:read' ,
-            //             'corerole:read'
-            //     ]
-            // );
-
+        dd($searchUser);
+        $listSearched = $this->serializer->serialize(
+            $searchUser,
+            'json',
+            [
+                'groups' => 'coreuser:read',
+                    'corecountry:read',
+                    'coreorganization:read',
+                    'corerole:read',
+            ]
+        );
+        dd($listSearched);
+        if (true == empty($searchUser)) {
             return new JsonResponse([
-                'totalItems' => sizeof($searchUser),
+                'totalItems' => 0,
                 'data' => [],
                 ]);
         } else {
             return new JsonResponse([
                'totalItems' => sizeof($searchUser),
-               'data' => [],
+               'data' => $listSearched,
                ]);
         }
     }
 
     /**
-     * getByOrganization.
-     *
-     * @return void
-     */
-    public function getByOrganization()
-    {
-        $user = $this->userRepo->findUserByOrg();
-        dd($user);
-        $listUser = $this->serializer->serialize(
-            $user,
-            'json',
-            [
-            'groups' => 'coreuser:read',
-                'corecountry:read',
-                'coreorganization:read',
-                'corerole:read',
-        ]
-        );
-        dd($listUser);
-
-        return $listUser;
-    }
-
-    /**
      * addSimpleUser.
+     * add new simple user.
      *
      * @param mixed $request
      * @param mixed $validator
@@ -130,7 +111,7 @@ class CoreUserAdditionalService
      */
     public function addSimpleUser(Request $request, ValidatorInterface $validator, UserPasswordHasherInterface $userPasswordHasher)
     {
-        $data = json_decose($request->getContent());
+        $data = json_decode($request->getContent());
         $this->em->getConnection()->beginTransaction();
         try {
             $user = new CoreUser();
@@ -141,8 +122,13 @@ class CoreUserAdditionalService
                     $user->getPassword()
                 )
             );
+            $user->setUsername($data->username);
+            $user->setUsernameCanonical($data->usernameCanonical);
+            $user->setEmail($data->email);
+            $user->setEmailCanonical($data->emailCanonical);
+            $user->setCivility($data->civility);
             $user->setType(CoreUser::TYPE_USER_ADDITIONAL);
-            $country = $this->countryRepo->find($adat->country);
+            $country = $this->countryRepo->find($data->country);
             if ($country instanceof CoreCountry) { // step1 : verify the existance of the country in CoreCountry
                 if ($country->isEnabled()) { // step2 : verify if the country is enabled or not
                     $user->addCoreCountry($country);
@@ -200,9 +186,7 @@ class CoreUserAdditionalService
             } else {
                 return new JsonResponse(['message' => 'this role does not exist .'], Response::HTTP_BAD_REQUEST);
             }
-
             $user->setRoles([]);
-
             $errors = $validator->validate($user);
             if (count($errors) > 0) {
                 return new Response($errors, Response::HTTP_BAD_REQUEST);
@@ -212,7 +196,8 @@ class CoreUserAdditionalService
             $this->em->flush();
             $this->em->getConnection()->commit();
 
-            return new JsonResponse([
+            return new JsonResponse(
+                [
                 'id' => $user->getId(),
                 'username' => $user->getUsername(),
                 'email' => $user->getEmail(),
@@ -229,6 +214,7 @@ class CoreUserAdditionalService
 
     /**
      * editSimpleUser.
+     * edit an existing simple user.
      *
      * @param mixed $request
      * @param mixed $idUser
@@ -241,31 +227,43 @@ class CoreUserAdditionalService
         if (empty($user)) {
             return new JsonResponse(['message' => 'User not found .try again !'], Response::HTTP_BAD_REQUEST);
         }
-        $donnees = json_decode($request->getContent());
+        $data = json_decode($request->getContent());
         if ('core_user_additional' == $user->getType()) {
             $this->em->getConnection()->beginTransaction();
             try {
-                setAttributes(
-                    $user,
-                    $donnees->username,
-                    $donnees->usernameCanonical,
-                    $donnees->email,
-                    $donnees->emailCanonical,
-                    $donnees->salt,
-                    $donnees->locale,
-                    $donnees->firstName,
-                    $donnees->lastName,
-                    $donnees->functionUser,
-                    $donnees->phone,
-                    $donnees->civility,
-                    $donnees->idErp
-                );
+                $user->setUsername($data->username);
+                $user->setUsernameCanonical($data->usernameCanonical);
+                $user->setEmail($data->email);
+                $user->setEmailCanonical($data->emailCanonical);
+                $user->setSalt($data->salt);
+                $user->setLocale($data->locale);
+                $user->setFirstName($data->firstName);
+                $user->setLastName($data->lastName);
+                $user->setFunctionUser($data->functionUser);
+                $user->setPhone($data->phone);
+                $user->setCivility($data->civility);
+                $user->setIdErp($data->idErp);
                 $user->setUpdatedAt(new \DateTimeImmutable());
 
                 $this->em->flush();
                 $this->em->getConnection()->commit();
 
-                return $user;
+                return new JsonResponse([
+                    'userId' => $user->getId(),
+                    'username' => $user->getUsername(),
+                    'username_canonical' => $user->getUsernameCanonical(),
+                    'email' => $user->getEmail(),
+                    'email_canonical' => $user->getEmailCanonical(),
+                    'salt' => $user->getSalt(),
+                    'locale' => $user->getLocale(),
+                    'first_name' => $user->getFirstName(),
+                    'last_name' => $user->getLastName(),
+                    'function_user' => $user->getFunctionUser(),
+                    'phone' => $user->getPhone(),
+                    'civility' => $user->getCivility(),
+                    'id_erp' => $user->getIdErp(),
+                    'updated_at' => $user->getUpdatedAt(),
+                ]);
             } catch (Exception $e) {
                 $em->getConnection()->rollback();
                 throw $e->getHttpResponse();
@@ -275,82 +273,6 @@ class CoreUserAdditionalService
                 ['message' => 'must be of type core_user_additional . try again '],
                 Response::HTTP_BAD_REQUEST
             );
-        }
-    }
-
-    /**
-     * setAttributes.
-     *
-     * @param mixed $user
-     * @param mixed $username
-     * @param mixed $usernameCanonical
-     * @param mixed $email
-     * @param mixed $emailCanonical
-     * @param mixed $salt
-     * @param mixed $locale
-     * @param mixed $firstName
-     * @param mixed $lastName
-     *
-     * @return void
-     */
-    public function setAttributes(
-        CoreUser $user,
-        $username,
-        $usernameCanonical,
-        $email,
-        $emailCanonical,
-        $salt,
-        $locale,
-        $firstName,
-        $lastName,
-        $functionUser,
-        $phone,
-        $civility,
-        $idErp
-    ) {
-        $user->setUsername($username);
-        $user->setUsernameCanonical($usernameCanonical);
-        $user->setEmail($email);
-        $user->setEmailCanonical($emailCanonical);
-        $user->setSalt($salt);
-        $user->setLocale($locale);
-        $user->setFirstName($firstName);
-        $user->setLastName($lastName);
-        $user->setFunctionUser($functionUser);
-        $user->setPhone($phone);
-        $user->setCivility($civility);
-        $user->setIdErp($idErp);
-    }
-
-    /**
-     * getSimpleUserById.
-     *
-     * @param mixed $idUser
-     *
-     * @return void
-     */
-    public function getSimpleUserById($idUser)
-    {
-        $user = $this->userRepo->find($idUser);
-        $this->em->getConnection()->beginTransaction();
-        try {
-            if ($user instanceof CoreUser) {
-                if ('core_user_additional' == $user->getType()) {
-                    $p = $this->serializer->serialize($user, 'json');
-
-                    return $p;
-                } else {
-                    return new JsonResponse(
-                        ['message' => 'this user should be core_user_additional type .'],
-                        Response::HTTP_BAD_REQUEST
-                    );
-                }
-            } else {
-                return new JsonResponse(['message' => 'this user does not exist .'], Response::HTTP_BAD_REQUEST);
-            }
-        } catch (Exception $e) {
-            $em->getConnection()->rollback();
-            throw $e->getHttpResponse();
         }
     }
 
@@ -373,21 +295,21 @@ class CoreUserAdditionalService
                 if ('core_user_additional' == $user->getType()) {
                     if ($user->isEnabled()) { // verify if the user account is enabled
                         if (false == $data->enabled | 0 == $data->enabled) { // verify if the value passed in the request is false or 0
-                            $user->setEnabled($donnees->enabled); // disable the user
+                            $user->setEnabled($data->enabled); // disable the user
                             $this->em->flush();
                             $this->em->getConnection()->commit();
 
-                            return 'user is disabled ! ';
+                            return new JsonResponse('user is disabled ! ', Response::HTTP_OK);
                         } else {
                             return new JsonResponse(['message' => 'boolean value is required or is already enabled . try again'], Response::HTTP_BAD_REQUEST);
                         }
                     } elseif (!$user->isEnabled()) {
-                        if (true == $donnees->enabled | 1 == $donnees->enabled) { // verify if the value passed in the request is true or 1
-                            $user->setEnabled($donnees->enabled); // enable the user
+                        if (true == $data->enabled | 1 == $data->enabled) { // verify if the value passed in the request is true or 1
+                            $user->setEnabled($data->enabled); // enable the user
                             $this->em->flush();
                             $this->em->getConnection()->commit();
 
-                            return 'user is enabled ! ';
+                            return new JsonResponse('user is enabled ! ', Response::HTTP_OK);
                         } else {
                             return new JsonResponse(['message' => 'boolean value is required or is already disabled . try again'], Response::HTTP_BAD_REQUEST);
                         }

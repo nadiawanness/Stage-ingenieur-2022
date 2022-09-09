@@ -130,4 +130,68 @@ class CoreAdminAdditionalService
             throw $e->getHttpResponse();
         }
     }
+
+    /**
+     * editAdmin
+     * edit an existing admin.
+     *
+     * @param mixed $request
+     * @param mixed $idUser
+     *
+     * @return void
+     */
+    public function editAdmin(Request $request, $idUser)
+    {
+        $user = $this->userRepo->find($idUser);
+        if (empty($user)) {
+            return new JsonResponse(['message' => 'User not found .try again !'], Response::HTTP_BAD_REQUEST);
+        }
+        $data = json_decode($request->getContent());
+        if ('core_admin_additional' == $user->getType()) {
+            $this->em->getConnection()->beginTransaction();
+            try {
+                $user->setUsername($data->username);
+                $user->setUsernameCanonical($data->usernameCanonical);
+                $user->setEmail($data->email);
+                $user->setEmailCanonical($data->emailCanonical);
+                $user->setSalt($data->salt);
+                $user->setLocale($data->locale);
+                $user->setFirstName($data->firstName);
+                $user->setLastName($data->lastName);
+                $user->setFunctionUser($data->functionUser);
+                $user->setPhone($data->phone);
+                $user->setCivility($data->civility);
+                $user->setIdErp($data->idErp);
+                $user->setUpdatedAt(new \DateTimeImmutable());
+
+                $this->em->flush();
+                $this->em->getConnection()->commit();
+
+                return new JsonResponse([
+                    'userId' => $user->getId(),
+                    'username' => $user->getUsername(),
+                    'username_canonical' => $user->getUsernameCanonical(),
+                    'email' => $user->getEmail(),
+                    'email_canonical' => $user->getEmailCanonical(),
+                    'salt' => $user->getSalt(),
+                    'locale' => $user->getLocale(),
+                    'first_name' => $user->getFirstName(),
+                    'last_name' => $user->getLastName(),
+                    'function_user' => $user->getFunctionUser(),
+                    'phone' => $user->getPhone(),
+                    'civility' => $user->getCivility(),
+                    'id_erp' => $user->getIdErp(),
+                    'updated_at' => $user->getUpdatedAt(),
+                ]);
+            } catch (Exception $e) {
+                $em->getConnection()->rollback();
+                throw $e->getHttpResponse();
+            }
+        } else {
+            return new JsonResponse(
+                ['message' => 'must be of type core_user_additional . try again '],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+    }
 }

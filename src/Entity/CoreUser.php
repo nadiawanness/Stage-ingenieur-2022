@@ -94,7 +94,7 @@ class CoreUser implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 255)]
     // #[Assert\Choice(callback: 'getCivilities')]
-    // #[Assert\Choice([CIVILITY_MR,CIVILITY_MRS,CIVILITY_MS])]
+    #[Assert\Choice([CoreUser::CIVILITY_MR, CoreUser::CIVILITY_MRS, CoreUser::CIVILITY_MS])]
     #[Assert\NotBlank(message: 'Civility is required !')]
     #[Groups('coreuser:read')]
     private ?string $civility = null;

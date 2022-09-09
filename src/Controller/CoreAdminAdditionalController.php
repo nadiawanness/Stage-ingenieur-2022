@@ -13,28 +13,26 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class CoreAdminAdditionalController extends AbstractController
 {
-    #[Route('/api/getAdmin', name: 'app_get_admin', methods: ['GET'])]
     /**
      * getAdmins
-     * list admins.
      * get list of admins.
      *
      * @param mixed $admin
      * @param mixed $request
      */
+    #[Route('/api/getAdmin', name: 'app_get_admin', methods: ['GET'])]
     public function getAdmins(CoreAdminAdditionalService $admin, Request $request): Response
     {
         if ($this->container->get('security.authorization_checker')->isGranted('ROLE_SUPER_ADMIN')) {
             return $admin->getAdmin($request);
         } else {
             return new JsonResponse(
-                ['message' => 'role admin is required . try again'],
+                ['message' => 'role super admin is required . try again'],
                 Response::HTTP_BAD_REQUEST
             );
         }
     }
 
-    #[Route('/api/postAdmin', name: 'app_post_admin', methods: ['POST'])]
     /**
      * postAdmin.
      * post a new admin.
@@ -46,13 +44,37 @@ class CoreAdminAdditionalController extends AbstractController
      *
      * @return void
      */
+    #[Route('/api/postAdmin', name: 'app_post_admin', methods: ['POST'])]
     public function postAdmin(CoreAdminAdditionalService $admin, Request $request, ValidatorInterface $validator, UserPasswordHasherInterface $userPasswordHasher)
     {
         if ($this->container->get('security.authorization_checker')->isGranted('ROLE_SUPER_ADMIN')) {
             return $admin->addAdmin($request, $validator, $userPasswordHasher);
         } else {
             return new JsonResponse(
-                ['message' => 'role admin is required . try again'],
+                ['message' => 'role super admin is required . try again'],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+    }
+
+    /**
+     * putAdmin
+     * put an existing admin.
+     *
+     * @param mixed $simpleUser
+     * @param mixed $request
+     * @param mixed $idUser
+     *
+     * @return void
+     */
+    #[Route('/api/putAdmin/{idUser}', name: 'app_put_admin', methods: ['PUT'])]
+    public function putAdmin(CoreAdminAdditionalService $admin, Request $request, $idUser)
+    {
+        if ($this->container->get('security.authorization_checker')->isGranted('ROLE_SUPER_ADMIN')) {
+            return $admin->editAdmin($request, $idUser);
+        } else {
+            return new JsonResponse(
+                ['message' => 'role super admin is required . try again'],
                 Response::HTTP_BAD_REQUEST
             );
         }

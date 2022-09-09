@@ -36,6 +36,18 @@ class SecurityController extends AbstractController
         );
     }
 
+    /**
+     * loginTokenDetails
+     * generate tokens.
+     *
+     * @param mixed $userRepo
+     * @param mixed $accessRepo
+     * @param mixed $request
+     * @param mixed $JWTManager
+     * @param mixed $em
+     *
+     * @return void
+     */
     #[Route(path: '/login/token', name: 'api_login_token', methods: ['POST'])]
     public function loginTokenDetails(
         CoreUserRepository $userRepo,
@@ -49,8 +61,8 @@ class SecurityController extends AbstractController
         if (isset($user)) {
             foreach ($user as $user) {
                 $userPassword = $user->getPassword();
+                $userType = $user->getType();
             }
-
             if (password_verify($data->password, $userPassword)) {
                 $token = $JWTManager->create($user);
                 $access = $accessRepo->findByUser($user->getId());
@@ -64,14 +76,48 @@ class SecurityController extends AbstractController
                         $access->setSingleUseToken($token);
                         $em->flush();
                         $em->getConnection()->commit();
-
-                        return new JsonResponse([
-                            'notice' => 'new token for an old user',
-                            'token' => $token,
-                            'userEmail' => $user->getEmail(),
-                            'userType' => $user->getType(),
-                            'token ttl' => time() + 3600,
-                        ]);
+                        // dd($userType);
+                        if ('core_admin_additional' == $user->getType()) {
+                            return new JsonResponse([
+                                'access token' => $token,
+                                'email' => $user->getEmail(),
+                                'expire_in' => time() + 3600,
+                                'first_name' => $user->getFirstName(),
+                                'last_name' => $user->getLastName(),
+                                'locale' => $user->getLocale(),
+                                'organizations' => [],
+                                'role_admin' => true,
+                                'role_super_admin' => false,
+                                'token_type' => 'bearer',
+                                'user_id' => $user->getId(),
+                                ]);
+                        } elseif ('core_user_additional' == $user->getType()) {
+                            return new JsonResponse([
+                                'access token' => $token,
+                                'email' => $user->getEmail(),
+                                'expire_in' => time() + 3600,
+                                'first_name' => $user->getFirstName(),
+                                'last_name' => $user->getLastName(),
+                                'locale' => $user->getLocale(),
+                                'organizations' => [],
+                                'token_type' => 'bearer',
+                                'user_id' => $user->getId(),
+                                ]);
+                        } else {
+                            return new JsonResponse([
+                                'access token' => $token,
+                                'email' => $user->getEmail(),
+                                'expire_in' => time() + 3600,
+                                'first_name' => $user->getFirstName(),
+                                'last_name' => $user->getLastName(),
+                                'locale' => $user->getLocale(),
+                                'organizations' => [],
+                                'role_admin' => false,
+                                'role_super_admin' => true,
+                                'token_type' => 'bearer',
+                                'user_id' => $user->getId(),
+                                ]);
+                        }
                     } catch (Exception $e) {
                         $em->getConnection()->rollback();
                         throw $e;
@@ -96,13 +142,47 @@ class SecurityController extends AbstractController
                         $em->flush();
                         $em->getConnection()->commit();
 
-                        return new JsonResponse([
-                            'notice' => 'new token for a new user',
-                            'token' => $token,
-                            'userEmail' => $user->getEmail(),
-                            'userType' => $user->getType(),
-                            'token ttl' => time() + 3600,
-                            ]);
+                        if ('core_admin_additional' == $user->getType()) {
+                            return new JsonResponse([
+                                'access token' => $token,
+                                'email' => $user->getEmail(),
+                                'expire_in' => time() + 3600,
+                                'first_name' => $user->getFirstName(),
+                                'last_name' => $user->getLastName(),
+                                'locale' => $user->getLocale(),
+                                'organizations' => [],
+                                'role_admin' => true,
+                                'role_super_admin' => false,
+                                'token_type' => 'bearer',
+                                'user_id' => $user->getId(),
+                                ]);
+                        } elseif ('core_user_additional' == $user->getType()) {
+                            return new JsonResponse([
+                                'access token' => $token,
+                                'email' => $user->getEmail(),
+                                'expire_in' => time() + 3600,
+                                'first_name' => $user->getFirstName(),
+                                'last_name' => $user->getLastName(),
+                                'locale' => $user->getLocale(),
+                                'organizations' => [],
+                                'token_type' => 'bearer',
+                                'user_id' => $user->getId(),
+                                ]);
+                        } else {
+                            return new JsonResponse([
+                                'access token' => $token,
+                                'email' => $user->getEmail(),
+                                'expire_in' => time() + 3600,
+                                'first_name' => $user->getFirstName(),
+                                'last_name' => $user->getLastName(),
+                                'locale' => $user->getLocale(),
+                                'organizations' => [],
+                                'role_admin' => false,
+                                'role_super_admin' => true,
+                                'token_type' => 'bearer',
+                                'user_id' => $user->getId(),
+                                ]);
+                        }
                     } catch (Exception $e) {
                         $em->getConnection()->rollback();
                         throw $e->getHttpResponse();
