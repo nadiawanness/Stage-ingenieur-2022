@@ -189,10 +189,10 @@ class SecurityController extends AbstractController
                     }
                 }
             } else {
-                return new JsonResponse(['message' => 'invalid password . try again'], Response::HTTP_BAD_REQUEST);
+                return new JsonResponse(['message' => 'invalid password.try again'], Response::HTTP_BAD_REQUEST);
             }
         } else {
-            return new JsonResponse(['message' => 'invalid credentials . try again'], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['message' => 'invalid credentials.try again'], Response::HTTP_BAD_REQUEST);
         }
     }
 

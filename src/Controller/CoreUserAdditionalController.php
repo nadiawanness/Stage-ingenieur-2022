@@ -155,7 +155,7 @@ class CoreUserAdditionalController extends AbstractController
         }
     }
 
-    #[Route('/api/myDetails', name: 'app_my_details', methods: ['GET'])]
+    #[Route('/api/getDetails', name: 'app_get_details', methods: ['GET'])]
     public function myDetails()
     {
         $token = $this->container->get('security.token_storage')->getToken();
@@ -166,8 +166,11 @@ class CoreUserAdditionalController extends AbstractController
             'id' => $user->getId(),
             'username' => $user->getUsername(),
             'email' => $user->getEmail(),
-            'type' => $user->getType(),
             'civility' => $user->getCivility(),
+            'first_name' => $user->getFirstName(),
+            'last_name' => $user->getLastName(),
+            'phone' => $user->getPhone(),
+            'locale' => $user->getLocale()
             ],
             Response::HTTP_OK
         );

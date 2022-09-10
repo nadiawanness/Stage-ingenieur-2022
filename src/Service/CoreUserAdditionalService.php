@@ -123,9 +123,9 @@ class CoreUserAdditionalService
                 )
             );
             $user->setUsername($data->username);
-            $user->setUsernameCanonical($data->usernameCanonical);
+            $user->setUsernameCanonical($data->username);
             $user->setEmail($data->email);
-            $user->setEmailCanonical($data->emailCanonical);
+            $user->setEmailCanonical($data->email);
             $user->setCivility($data->civility);
             $user->setType(CoreUser::TYPE_USER_ADDITIONAL);
             $country = $this->countryRepo->find($data->country);
@@ -201,8 +201,11 @@ class CoreUserAdditionalService
                 'id' => $user->getId(),
                 'username' => $user->getUsername(),
                 'email' => $user->getEmail(),
-                'type' => $user->getType(),
                 'civility' => $user->getCivility(),
+                'first_name' => $user->getFirstName(),
+                'last_name' => $user->getLastName(),
+                'phone' => $user->getPhone(),
+                'locale' => $user->getLocale()
                 ],
                 Response::HTTP_CREATED
             );
@@ -232,10 +235,9 @@ class CoreUserAdditionalService
             $this->em->getConnection()->beginTransaction();
             try {
                 $user->setUsername($data->username);
-                $user->setUsernameCanonical($data->usernameCanonical);
+                $user->setUsernameCanonical($data->username);
                 $user->setEmail($data->email);
-                $user->setEmailCanonical($data->emailCanonical);
-                $user->setSalt($data->salt);
+                $user->setEmailCanonical($data->email);
                 $user->setLocale($data->locale);
                 $user->setFirstName($data->firstName);
                 $user->setLastName($data->lastName);
@@ -251,10 +253,7 @@ class CoreUserAdditionalService
                 return new JsonResponse([
                     'userId' => $user->getId(),
                     'username' => $user->getUsername(),
-                    'username_canonical' => $user->getUsernameCanonical(),
                     'email' => $user->getEmail(),
-                    'email_canonical' => $user->getEmailCanonical(),
-                    'salt' => $user->getSalt(),
                     'locale' => $user->getLocale(),
                     'first_name' => $user->getFirstName(),
                     'last_name' => $user->getLastName(),
@@ -299,7 +298,11 @@ class CoreUserAdditionalService
                             $this->em->flush();
                             $this->em->getConnection()->commit();
 
-                            return new JsonResponse('user is disabled ! ', Response::HTTP_OK);
+                            return new JsonResponse([
+                                'id' => $user->getId(),
+                                'email' => $user->getEmail(),
+                                'enabled' => $user->isEnabled()
+                            ], Response::HTTP_OK);
                         } else {
                             return new JsonResponse(['message' => 'boolean value is required or is already enabled . try again'], Response::HTTP_BAD_REQUEST);
                         }
@@ -309,7 +312,11 @@ class CoreUserAdditionalService
                             $this->em->flush();
                             $this->em->getConnection()->commit();
 
-                            return new JsonResponse('user is enabled ! ', Response::HTTP_OK);
+                            return new JsonResponse([
+                                'id' => $user->getId(),
+                                'email' => $user->getEmail(),
+                                'enabled' => $user->isEnabled()
+                            ], Response::HTTP_OK);
                         } else {
                             return new JsonResponse(['message' => 'boolean value is required or is already disabled . try again'], Response::HTTP_BAD_REQUEST);
                         }

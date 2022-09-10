@@ -47,7 +47,6 @@ class CoreAdminAdditionalService
             'coreorganization:read',
             'corerole:read',
         ]);
-
         return new Response($listAdmin, Response::HTTP_OK);
     }
 
@@ -74,20 +73,25 @@ class CoreAdminAdditionalService
                     $user->getPassword()
                 )
             );
-            $country = $this->countryRepo->find($data->country);
-            if ($country instanceof CoreCountry) {
-                if ($country->isEnabled()) {
-                    $user->addCoreCountry($country);
+            foreach($data->country as $idCountry)
+            {
+                $country = $this->countryRepo->find($idCountry);
+                if ($country instanceof CoreCountry) {
+                    if ($country->isEnabled()) {
+                        $user->addCoreCountry($country);
+                    } else {
+                        return new JsonResponse(['message' => 'this country is disabled . try again'], Response::HTTP_BAD_REQUEST);
+                    }
                 } else {
-                    return new JsonResponse(['message' => 'this country is disabled . try again'], Response::HTTP_BAD_REQUEST);
+                    return new JsonResponse(['message' => 'this country does not exist . try again'], Response::HTTP_BAD_REQUEST);
                 }
-            } else {
-                return new JsonResponse(['message' => 'this country does not exist . try again'], Response::HTTP_BAD_REQUEST);
             }
+            //$country = $this->countryRepo->find($data->country);
+            
             $user->setUsername($data->username);
-            $user->setUsernameCanonical($data->usernameCanonical);
+            $user->setUsernameCanonical($data->username);
             $user->setEmail($data->email);
-            $user->setEmailCanonical($data->emailCanonical);
+            $user->setEmailCanonical($data->email);
             $user->setCivility($data->civility);
             $user->setType(CoreUser::TYPE_ADMIN_ADDITIONAL);
             $user->setEnabled(true);
@@ -117,11 +121,14 @@ class CoreAdminAdditionalService
             $this->em->getConnection()->commit();
 
             return new JsonResponse([
-                    'id' => $user->getId(),
-                    'username' => $user->getUsername(),
-                    'email' => $user->getEmail(),
-                    'type' => $user->getType(),
-                    'civility' => $user->getCivility(),
+                'id' => $user->getId(),
+                'username' => $user->getUsername(),
+                'email' => $user->getEmail(),
+                'civility' => $user->getCivility(),
+                'first_name' => $user->getFirstName(),
+                'last_name' => $user->getLastName(),
+                'phone' => $user->getPhone(),
+                'locale' => $user->getLocale()
                 ],
                 Response::HTTP_CREATED
             );
@@ -151,9 +158,9 @@ class CoreAdminAdditionalService
             $this->em->getConnection()->beginTransaction();
             try {
                 $user->setUsername($data->username);
-                $user->setUsernameCanonical($data->usernameCanonical);
+                $user->setUsernameCanonical($data->username);
                 $user->setEmail($data->email);
-                $user->setEmailCanonical($data->emailCanonical);
+                $user->setEmailCanonical($data->email);
                 $user->setSalt($data->salt);
                 $user->setLocale($data->locale);
                 $user->setFirstName($data->firstName);
@@ -170,9 +177,7 @@ class CoreAdminAdditionalService
                 return new JsonResponse([
                     'userId' => $user->getId(),
                     'username' => $user->getUsername(),
-                    'username_canonical' => $user->getUsernameCanonical(),
                     'email' => $user->getEmail(),
-                    'email_canonical' => $user->getEmailCanonical(),
                     'salt' => $user->getSalt(),
                     'locale' => $user->getLocale(),
                     'first_name' => $user->getFirstName(),
