@@ -5,7 +5,6 @@ namespace App\Controller;
 use App\Entity\AccessToken;
 use App\Repository\AccessTokenRepository;
 use App\Repository\CoreUserRepository;
-use App\Service\CoreAdminAdditionalService;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -201,14 +200,4 @@ class SecurityController extends AbstractController
     {
         throw new \LogicException('This method can be blank - it will be intercepted by the logout key on your firewall.');
     }
-
-    /* #[Route('/getAdmin',name: 'app_get_admin',methods: ['GET'])]
-    public function getAdmins(CoreAdminAdditionalService $admin,Request $request){
-
-            return new Response (
-                $admin->getAdmin($request)
-             );
-
-
-    } */
 }

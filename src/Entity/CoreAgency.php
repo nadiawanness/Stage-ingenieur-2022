@@ -68,10 +68,6 @@ class CoreAgency
     #[ORM\JoinColumn(name: 'core_organization_id', referencedColumnName: 'id')]
     private ?CoreOrganization $coreOrganization = null;
 
-    /* #[ORM\ManyToOne(inversedBy: 'agencies')]
-    #[ORM\JoinColumn(name: 'creator_id', referencedColumnName: 'id')]
-    private ?CoreUser $creatorId = null; */
-
     public function __construct()
     {
         $this->coreUserAgencies = new ArrayCollection();
@@ -304,16 +300,4 @@ class CoreAgency
 
         return $this;
     }
-
-    /* public function getCreatorId(): ?CoreUser
-    {
-        return $this->creatorId;
-    }
-
-    public function setCreatorId(?CoreUser $creatorId): self
-    {
-        $this->creatorId = $creatorId;
-
-        return $this;
-    } */
 }

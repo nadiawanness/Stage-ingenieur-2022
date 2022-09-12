@@ -15,153 +15,98 @@ class CoreOrganization
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    // #[Groups('coreorganization:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?string $companyNumber = null;
 
     #[ORM\Column(length: 255)]
-    // #[Groups('coreorganization:read')]
     #[Groups(['coreuser:read', 'coreorganization:read'])]
     private ?string $companyName = null;
 
     #[ORM\Column(nullable: true)]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?int $vat = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?string $email = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?string $phoneNumber = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?string $status = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?string $nomenclature = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?string $createdBy = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?string $branch = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?string $branchStatus = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?string $currentStatus = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?string $companyType = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?\DateTimeInterface $dissolutionDate = null;
 
     #[ORM\Column(nullable: true)]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?bool $inactive = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?\DateTimeInterface $incorporationDate = null;
 
     #[ORM\Column(nullable: true)]
     private array $industryCodes = [];
 
     #[ORM\Column(length: 255, nullable: true)]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?string $jurisdictionCode = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?string $nativeCompanyNumber = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?string $openCorporatesUrl = null;
 
     #[ORM\Column(nullable: true)]
     private array $previousNames = [];
 
     #[ORM\Column(length: 255, nullable: true)]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?string $registryUrl = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?string $restrictedForMarketing = null;
 
     #[ORM\Column(nullable: true)]
     private array $source = [];
 
     #[ORM\Column(length: 255, nullable: true)]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?string $logo = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?string $customTranslationPath = null;
 
     #[ORM\Column]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?bool $enabled = null;
 
     #[ORM\Column(nullable: true)]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?\DateTimeImmutable $retrivedAt = null;
 
     #[ORM\Column(nullable: true)]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column(nullable: true)]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?\DateTimeImmutable $updatedAt = null;
 
     #[ORM\ManyToOne(inversedBy: 'coreOrganizations')]
     #[ORM\JoinColumn(name: 'assigned_to', referencedColumnName: 'id')]
-    // #[Groups('coreuser:read')]
-    // #[Groups([ 'coreuser:read' , 'coreorganization:read' ])]
     private ?CoreUser $assignedTo = null;
 
     #[ORM\OneToMany(mappedBy: 'coreOrganization', targetEntity: CoreAgency::class, orphanRemoval: true)]

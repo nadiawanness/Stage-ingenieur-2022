@@ -205,7 +205,7 @@ class CoreUserAdditionalService
                 'first_name' => $user->getFirstName(),
                 'last_name' => $user->getLastName(),
                 'phone' => $user->getPhone(),
-                'locale' => $user->getLocale()
+                'locale' => $user->getLocale(),
                 ],
                 Response::HTTP_CREATED
             );
@@ -301,7 +301,7 @@ class CoreUserAdditionalService
                             return new JsonResponse([
                                 'id' => $user->getId(),
                                 'email' => $user->getEmail(),
-                                'enabled' => $user->isEnabled()
+                                'enabled' => $user->isEnabled(),
                             ], Response::HTTP_OK);
                         } else {
                             return new JsonResponse(['message' => 'boolean value is required or is already enabled . try again'], Response::HTTP_BAD_REQUEST);
@@ -315,7 +315,7 @@ class CoreUserAdditionalService
                             return new JsonResponse([
                                 'id' => $user->getId(),
                                 'email' => $user->getEmail(),
-                                'enabled' => $user->isEnabled()
+                                'enabled' => $user->isEnabled(),
                             ], Response::HTTP_OK);
                         } else {
                             return new JsonResponse(['message' => 'boolean value is required or is already disabled . try again'], Response::HTTP_BAD_REQUEST);

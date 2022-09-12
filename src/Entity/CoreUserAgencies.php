@@ -12,15 +12,12 @@ class CoreUserAgencies
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    // #[Groups('coreuser:read')]
     private ?int $id = null;
 
     #[ORM\Column]
-    // #[Groups('coreuser:read')]
     private ?bool $isDefault = null;
 
     #[ORM\Column]
-    // #[Groups('coreuser:read')]
     private ?bool $enabled = null;
 
     #[ORM\Column]

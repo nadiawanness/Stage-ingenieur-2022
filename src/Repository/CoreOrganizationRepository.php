@@ -51,18 +51,6 @@ class CoreOrganizationRepository extends ServiceEntityRepository
         ;
     }
 
-  /*  public function findCoreUserByType($type): array
-    {
-        return $this->createQueryBuilder('organisation')
-            ->select('organisation')
-            ->andWhere('organisation.assignedTo.id = :val')
-            ->setParameter('val', $type)
-            ->orderBy('user.id', 'DESC')
-            ->getQuery()
-            ->getResult()
-  ;
-  } */
-
 //    /**
 //     * @return CoreOrganization[] Returns an array of CoreOrganization objects
 //     */

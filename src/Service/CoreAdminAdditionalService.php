@@ -47,6 +47,7 @@ class CoreAdminAdditionalService
             'coreorganization:read',
             'corerole:read',
         ]);
+
         return new Response($listAdmin, Response::HTTP_OK);
     }
 
@@ -73,8 +74,7 @@ class CoreAdminAdditionalService
                     $user->getPassword()
                 )
             );
-            foreach($data->country as $idCountry)
-            {
+            foreach ($data->country as $idCountry) {
                 $country = $this->countryRepo->find($idCountry);
                 if ($country instanceof CoreCountry) {
                     if ($country->isEnabled()) {
@@ -86,8 +86,8 @@ class CoreAdminAdditionalService
                     return new JsonResponse(['message' => 'this country does not exist . try again'], Response::HTTP_BAD_REQUEST);
                 }
             }
-            //$country = $this->countryRepo->find($data->country);
-            
+            // $country = $this->countryRepo->find($data->country);
+
             $user->setUsername($data->username);
             $user->setUsernameCanonical($data->username);
             $user->setEmail($data->email);
@@ -128,7 +128,7 @@ class CoreAdminAdditionalService
                 'first_name' => $user->getFirstName(),
                 'last_name' => $user->getLastName(),
                 'phone' => $user->getPhone(),
-                'locale' => $user->getLocale()
+                'locale' => $user->getLocale(),
                 ],
                 Response::HTTP_CREATED
             );
