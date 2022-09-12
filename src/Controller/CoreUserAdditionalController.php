@@ -33,7 +33,7 @@ class CoreUserAdditionalController extends AbstractController
             return $simpleUser->getSimpleUser($request, $this->getUser());
         } else {
             return new JsonResponse(
-                ['message' => 'role admin is required . try again'],
+                ['message' => 'role admin is required.try again'],
                 Response::HTTP_BAD_REQUEST
             );
         }
@@ -59,7 +59,7 @@ class CoreUserAdditionalController extends AbstractController
             return $simpleUser->searchSimpleUser($this->getUser(), $request);
         } else {
             return new JsonResponse(
-                ['message' => 'role admin is required . try again'],
+                ['message' => 'role admin is required.try again'],
                 Response::HTTP_BAD_REQUEST
             );
         }
@@ -87,7 +87,7 @@ class CoreUserAdditionalController extends AbstractController
             return $simpleUser->addSimpleUser($request, $validator, $userPasswordHasher);
         } else {
             return new JsonResponse(
-                ['message' => 'role admin is required . try again'],
+                ['message' => 'role admin is required.try again'],
                 Response::HTTP_BAD_REQUEST
             );
         }
@@ -118,7 +118,7 @@ class CoreUserAdditionalController extends AbstractController
             return $simpleUser->editSimpleUser($request, $idUser);
         } else {
             return new JsonResponse(
-                ['message' => 'role admin is required . try again'],
+                ['message' => 'role admin is required.try again'],
                 Response::HTTP_BAD_REQUEST
             );
         }
@@ -149,7 +149,7 @@ class CoreUserAdditionalController extends AbstractController
             return $simpleUser->changeStatusUser($idUser, $request);
         } else {
             return new JsonResponse(
-                ['message' => 'role admin is required . try again'],
+                ['message' => 'role admin is required.try again'],
                 Response::HTTP_BAD_REQUEST
             );
         }

@@ -27,7 +27,7 @@ class CoreAdminAdditionalController extends AbstractController
             return $admin->getAdmin($request);
         } else {
             return new JsonResponse(
-                ['message' => 'role super admin is required . try again'],
+                ['message' => 'role super admin is required.try again'],
                 Response::HTTP_BAD_REQUEST
             );
         }
@@ -51,7 +51,7 @@ class CoreAdminAdditionalController extends AbstractController
             return $admin->addAdmin($request, $validator, $userPasswordHasher);
         } else {
             return new JsonResponse(
-                ['message' => 'role super admin is required . try again'],
+                ['message' => 'role super admin is required.try again'],
                 Response::HTTP_BAD_REQUEST
             );
         }
@@ -74,7 +74,7 @@ class CoreAdminAdditionalController extends AbstractController
             return $admin->editAdmin($request, $idUser);
         } else {
             return new JsonResponse(
-                ['message' => 'role super admin is required . try again'],
+                ['message' => 'role super admin is required.try again'],
                 Response::HTTP_BAD_REQUEST
             );
         }

@@ -133,10 +133,10 @@ class CoreUserAdditionalService
                 if ($country->isEnabled()) { // step2 : verify if the country is enabled or not
                     $user->addCoreCountry($country);
                 } else {
-                    return new JsonResponse(['message' => 'this country is disabled .'], Response::HTTP_BAD_REQUEST);
+                    return new JsonResponse(['message' => 'this country is disabled.'], Response::HTTP_BAD_REQUEST);
                 }
             } else {
-                return new JsonResponse(['message' => 'this country does not exist .'], Response::HTTP_BAD_REQUEST);
+                return new JsonResponse(['message' => 'this country does not exist.'], Response::HTTP_BAD_REQUEST);
             }
 
             $organization = $this->orgRepo->find($data->organization);
@@ -146,13 +146,13 @@ class CoreUserAdditionalService
                     if ('valid' == $organization->getStatus()) { // step3 : verify if the organisation status (valid or not)
                         $user->addOrganization($organization);
                     } else {
-                        return new JsonResponse(['message' => 'this organization is not valid .'], Response::HTTP_BAD_REQUEST);
+                        return new JsonResponse(['message' => 'this organization is not valid.'], Response::HTTP_BAD_REQUEST);
                     }
                 } else {
-                    return new JsonResponse(['message' => 'this organization is disabled .'], Response::HTTP_BAD_REQUEST);
+                    return new JsonResponse(['message' => 'this organization is disabled.'], Response::HTTP_BAD_REQUEST);
                 }
             } else {
-                return new JsonResponse(['message' => 'this organization does not exist .'], Response::HTTP_BAD_REQUEST);
+                return new JsonResponse(['message' => 'this organization does not exist.'], Response::HTTP_BAD_REQUEST);
             }
             $agency = $this->agencyRepo->find($data->agency);
             if ($agency instanceof CoreAgency) { // step1 : verify the existance of the agency
@@ -163,13 +163,13 @@ class CoreUserAdditionalService
                         $coreUserAgency->setCoreAgency($agency);
                         $this->em->persist($coreUserAgency);
                     } else {
-                        return new JsonResponse(['message' => 'this agency is disabled .'], Response::HTTP_BAD_REQUEST);
+                        return new JsonResponse(['message' => 'this agency is disabled.'], Response::HTTP_BAD_REQUEST);
                     }
                 } else {
-                    return new JsonResponse(['message' => 'this agency does not belong to the chosen organisation .'], Response::HTTP_BAD_REQUEST);
+                    return new JsonResponse(['message' => 'this agency does not belong to the chosen organisation.'], Response::HTTP_BAD_REQUEST);
                 }
             } else {
-                return new JsonResponse(['message' => 'this agency does not exist .'], Response::HTTP_BAD_REQUEST);
+                return new JsonResponse(['message' => 'this agency does not exist.'], Response::HTTP_BAD_REQUEST);
             }
 
             $role = $this->roleRepo->find($data->role);
@@ -181,10 +181,10 @@ class CoreUserAdditionalService
                     $this->em->persist($coreUserRole);
                     $this->em->flush();
                 } else {
-                    return new JsonResponse(['message' => 'this role is disabled .'], Response::HTTP_BAD_REQUEST);
+                    return new JsonResponse(['message' => 'this role is disabled.'], Response::HTTP_BAD_REQUEST);
                 }
             } else {
-                return new JsonResponse(['message' => 'this role does not exist .'], Response::HTTP_BAD_REQUEST);
+                return new JsonResponse(['message' => 'this role does not exist.'], Response::HTTP_BAD_REQUEST);
             }
             $user->setRoles([]);
             $errors = $validator->validate($user);
@@ -228,7 +228,7 @@ class CoreUserAdditionalService
     {
         $user = $this->userRepo->find($idUser);
         if (empty($user)) {
-            return new JsonResponse(['message' => 'User not found .try again !'], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['message' => 'User not found.try again!'], Response::HTTP_BAD_REQUEST);
         }
         $data = json_decode($request->getContent());
         if ('core_user_additional' == $user->getType()) {
@@ -269,7 +269,7 @@ class CoreUserAdditionalService
             }
         } else {
             return new JsonResponse(
-                ['message' => 'must be of type core_user_additional . try again '],
+                ['message' => 'must be of type core_user_additional.try again '],
                 Response::HTTP_BAD_REQUEST
             );
         }
@@ -304,7 +304,7 @@ class CoreUserAdditionalService
                                 'enabled' => $user->isEnabled(),
                             ], Response::HTTP_OK);
                         } else {
-                            return new JsonResponse(['message' => 'boolean value is required or is already enabled . try again'], Response::HTTP_BAD_REQUEST);
+                            return new JsonResponse(['message' => 'boolean value is required or is already enabled.try again'], Response::HTTP_BAD_REQUEST);
                         }
                     } elseif (!$user->isEnabled()) {
                         if (true == $data->enabled | 1 == $data->enabled) { // verify if the value passed in the request is true or 1
@@ -318,16 +318,16 @@ class CoreUserAdditionalService
                                 'enabled' => $user->isEnabled(),
                             ], Response::HTTP_OK);
                         } else {
-                            return new JsonResponse(['message' => 'boolean value is required or is already disabled . try again'], Response::HTTP_BAD_REQUEST);
+                            return new JsonResponse(['message' => 'boolean value is required or is already disabled.try again'], Response::HTTP_BAD_REQUEST);
                         }
                     } else {
-                        return new JsonResponse(['message' => 'error . try again'], Response::HTTP_BAD_REQUEST);
+                        return new JsonResponse(['message' => 'error.try again'], Response::HTTP_BAD_REQUEST);
                     }
                 } else {
-                    return new JsonResponse(['message' => 'this user should be a core_user_additional type .'], Response::HTTP_BAD_REQUEST);
+                    return new JsonResponse(['message' => 'this user should be a core_user_additional type.'], Response::HTTP_BAD_REQUEST);
                 }
             } else {
-                return new JsonResponse(['message' => 'this user does not exist .'], Response::HTTP_BAD_REQUEST);
+                return new JsonResponse(['message' => 'this user does not exist.'], Response::HTTP_BAD_REQUEST);
             }
         } catch (Exception $e) {
             $em->getConnection()->rollback();

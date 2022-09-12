@@ -80,13 +80,12 @@ class CoreAdminAdditionalService
                     if ($country->isEnabled()) {
                         $user->addCoreCountry($country);
                     } else {
-                        return new JsonResponse(['message' => 'this country is disabled . try again'], Response::HTTP_BAD_REQUEST);
+                        return new JsonResponse(['message' => 'this country is disabled.try again'], Response::HTTP_BAD_REQUEST);
                     }
                 } else {
-                    return new JsonResponse(['message' => 'this country does not exist . try again'], Response::HTTP_BAD_REQUEST);
+                    return new JsonResponse(['message' => 'this country does not exist.try again'], Response::HTTP_BAD_REQUEST);
                 }
             }
-            // $country = $this->countryRepo->find($data->country);
 
             $user->setUsername($data->username);
             $user->setUsernameCanonical($data->username);
@@ -105,10 +104,10 @@ class CoreAdminAdditionalService
                     $this->em->persist($coreUserRole);
                     $this->em->flush();
                 } else {
-                    return new JsonResponse(['message' => 'this role is disabled . try again'], Response::HTTP_BAD_REQUEST);
+                    return new JsonResponse(['message' => 'this role is disabled.try again'], Response::HTTP_BAD_REQUEST);
                 }
             } else {
-                return new JsonResponse(['message' => 'this role does not exist . try again'], Response::HTTP_BAD_REQUEST);
+                return new JsonResponse(['message' => 'this role does not exist.try again'], Response::HTTP_BAD_REQUEST);
             }
             $user->addCoreUserRole($coreUserRole);
             $user->setRoles([]);
@@ -151,7 +150,7 @@ class CoreAdminAdditionalService
     {
         $user = $this->userRepo->find($idUser);
         if (empty($user)) {
-            return new JsonResponse(['message' => 'User not found .try again !'], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['message' => 'User not found.try again!'], Response::HTTP_BAD_REQUEST);
         }
         $data = json_decode($request->getContent());
         if ('core_admin_additional' == $user->getType()) {
@@ -194,7 +193,7 @@ class CoreAdminAdditionalService
             }
         } else {
             return new JsonResponse(
-                ['message' => 'must be of type core_user_additional . try again '],
+                ['message' => 'must be of type core_user_additional.try again '],
                 Response::HTTP_BAD_REQUEST
             );
         }
